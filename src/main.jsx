@@ -7,6 +7,7 @@ import NotFound from "./routes/NotFound";
 import Profile from "./routes/Profile";
 import Home from "./routes/Home";
 import Feedback from "./routes/Feedback";
+import AdminUserFeedbacks from "./routes/AdminUserFeedbacks";
 import { CookiesProvider } from "react-cookie";
 import darkTheme from "./theme";
 import { ThemeProvider } from "@emotion/react";
@@ -23,10 +24,14 @@ createRoot(document.getElementById("root")).render(
             <CustomNavigateProvider>
               <Routes>
                 <Route path="/" element={<Home />} />
+                
                 <Route element={<ProtectedLayout />}>
                   <Route path="/profile" element={<Profile />} />
+                  <Route path="/feedback/match/:id" element={<Feedback type='match' />} />
+                  <Route path="/feedback/tournament/:id" element={<Feedback type='tournament' />} />
+                  <Route path="/admin/feedback/:userId" element={<AdminUserFeedbacks />} />
                 </Route>
-                <Route path="/feedback" element={<Feedback />} />
+
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </CustomNavigateProvider>

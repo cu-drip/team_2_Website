@@ -8,7 +8,9 @@ import { withInlineParam } from "../constants";
 const navLinks = [
   { label: "Главная", path: "/" },
   { label: "Профиль", path: "/profile" },
-  { label: "Отзывы", path: "/feedback" },
+  { label: "Отзывы Матча", path: "/feedback/match/123123" },
+  { label: "Отзывы Турнира", path: "/feedback/tournament/123123" },
+  { label: "Отзывы Пользователя (admin)", path: "/admin/feedback/123123" },
 ];
 
 export default function Navbar() {

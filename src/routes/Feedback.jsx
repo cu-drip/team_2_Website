@@ -1,54 +1,138 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import Box from "@mui/material/Box";
 import Paper from "@mui/material/Paper";
 import Typography from "@mui/material/Typography";
 import Button from "@mui/material/Button";
 import TextField from "@mui/material/TextField";
 import Rating from "@mui/material/Rating";
+import { useParams } from "react-router-dom";
+import { useAuth } from "../AuthContext";
+import {
+  getMatchFeedback,
+  postMatchFeedback,
+  getTournamentFeedback,
+  postTournamentFeedback,
+  getUserById,
+} from "../constants";
+import Avatar from "@mui/material/Avatar";
 
 
 const mockFeedbacks = [
   {
     id: "1",
-    user: "User1",
+    userId: "user1",
     text: "Отличная игра!",
     rating: 5,
     created_at: "2024-07-01",
   },
   {
     id: "2",
-    user: "User2",
+    userId: "user2",
     text: "Было интересно, но можно лучше.",
     rating: 4,
     created_at: "2024-07-02",
   },
 ];
 
-export default function Feedback() {
-  const [feedbacks, setFeedbacks] = useState(mockFeedbacks);
+export default function Feedback({ type }) {
+  const { id } = useParams();
+  const { user, accessToken } = useAuth();
+
+  const [feedbacks, setFeedbacks] = useState([]);
   const [text, setText] = useState("");
   const [rating, setRating] = useState(0);
   const [sending, setSending] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [userInfos, setUserInfos] = useState({});
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
+  const fetchFeedbacks = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    
+    try {
+      let res;
+      if (type === "match") {
+        res = await getMatchFeedback(id, accessToken);
+      } else if (type === "tournament") {
+        res = await getTournamentFeedback(id, accessToken);
+      } else {
+        setError("Некорректный тип отзыва");
+        setFeedbacks(mockFeedbacks);
+        setLoading(false);
+        return;
+      }
+      setFeedbacks(res.data);
+      
+      // Fetch user info for each feedback
+      const uniqueUserIds = Array.from(new Set(res.data.map(fb => fb.userId).filter(Boolean)));
+      const infos = {};
+      await Promise.all(uniqueUserIds.map(async (uid) => {
+        try {
+          const userRes = await getUserById(uid, accessToken);
+          infos[uid] = userRes.data;
+        } catch {
+          infos[uid] = null;
+        }
+      }));
+      setUserInfos(infos);
+    } catch {
+      setFeedbacks(mockFeedbacks);
+      setError("Ошибка загрузки отзывов, показаны тестовые данные");
+    } finally {
+      setLoading(false);
+    }
+  }, [id, type, accessToken]);
+
+  useEffect(() => {
+    fetchFeedbacks();
+  }, [fetchFeedbacks]);
+
+  const handleSubmit = async (event) => {
+    event.preventDefault();
     setSending(true);
-    // отправка на сервер
-    setTimeout(() => {
-      setFeedbacks([
-        ...feedbacks,
-        {
-          id: Date.now().toString(),
-          user: "Вы",
-          text,
-          rating,
-          created_at: new Date().toISOString().slice(0, 10),
-        },
-      ]);
-      setText("");
-      setRating(0);
+    setError(null);
+
+    try {
+      let res;
+      if (type === "match") {
+        res = await postMatchFeedback(
+          {
+            userId: user?.id,
+            matchId: id,
+            text,
+            rating,
+          },
+          accessToken
+        );
+      } else if (type === "tournament") {
+        res = await postTournamentFeedback(
+          {
+            userId: user?.id,
+            tournamentId: id,
+            text,
+            rating,
+          },
+          accessToken
+        );
+      } else {
+        setError("Некорректный тип отзыва");
+        setFeedbacks(mockFeedbacks);
+        setSending(false);
+        return;
+      }
+
+      if (res && (res.status === 201 || res.status === 200)) {
+        await fetchFeedbacks();
+        setText("");
+        setRating(0);
+      }
+    } catch {
+      setError("Ошибка отправки отзыва, показаны тестовые данные");
+      setFeedbacks(mockFeedbacks);
+    } finally {
       setSending(false);
-    }, 500);
+    }
   };
 
   return (
@@ -72,8 +156,8 @@ export default function Feedback() {
           border: "2px solid",
           borderColor: "divider",
           boxShadow: 6,
-          minWidth: { xs: "90vw", sm: 340 },
-          maxWidth: 400,
+          minWidth: { xs: "90vw", sm: 400 },
+          maxWidth: 600,
         }}
       >
         <Typography
@@ -85,79 +169,123 @@ export default function Feedback() {
             fontSize: { xs: "1.5rem", sm: "2rem" },
           }}
         >
-          Оставьте свой отзыв
-        </Typography>
-        <Box
-          component="form"
-          onSubmit={handleSubmit}
-          sx={{ display: "flex", flexDirection: "column", gap: 2, mb: 3 }}
-        >
-          <TextField
-            label="Ваш отзыв"
-            multiline
-            minRows={2}
-            maxRows={4}
-            value={text}
-            onChange={(e) => setText(e.target.value)}
-            fullWidth
-            required
-          />
-          <Rating
-            name="rating"
-            value={rating}
-            onChange={(_, value) => setRating(value)}
-            size="large"
-          />
-          <Button
-            type="submit"
-            variant="contained"
-            color="primary"
-            disabled={sending || !text || !rating}
-          >
-            {sending ? "Отправка..." : "Отправить"}
-          </Button>
-        </Box>
-        <Typography
-          variant="h6"
-          sx={{
-            color: "primary.main",
-            mb: 2,
-            fontWeight: 600,
-            fontSize: { xs: "1.1rem", sm: "1.3rem" },
-          }}
-        >
           Отзывы
         </Typography>
-        <Box sx={{ maxHeight: 200, overflowY: "auto", textAlign: "left" }}>
-          {feedbacks.length === 0 && (
-            <Typography color="text.secondary">Пока нет отзывов</Typography>
-          )}
-          {feedbacks.map((fb) => (
-            <Paper
-              key={fb.id}
+
+        <Box
+          sx={{
+            display: "flex",
+            flexDirection: "column",
+            gap: 2,
+            alignItems: "stretch",
+            width: "100%",
+          }}
+        >
+          <Box
+            component="form"
+            onSubmit={handleSubmit}
+            sx={{
+              display: "flex",
+              flexDirection: "column",
+              gap: 1,
+              bgcolor: "transparent",
+              border: "none",
+              p: 0,
+              maxWidth: 600,
+              mx: "auto",
+            }}
+          >
+            <Typography
+              variant="h6"
               sx={{
-                p: 2,
-                mb: 2,
-                bgcolor: "background.default",
-                borderRadius: 2,
-                border: "1px solid",
-                borderColor: "divider",
+                color: "primary.main",
+                mb: 1,
+                fontWeight: 600,
+                fontSize: { xs: "1.1rem", sm: "1.3rem" },
+                textAlign: "left",
               }}
             >
-              <Typography sx={{ fontWeight: 600, color: "primary.main" }}>
-                {fb.user}
+              Оставьте свой отзыв
+            </Typography>
+            {error && (
+              <Typography color="error" sx={{ mb: 1 }}>
+                {error}
               </Typography>
-              <Rating value={fb.rating} readOnly size="small" />
-              <Typography sx={{ fontSize: "0.95rem", mt: 1 }}>
-                {fb.text}
-              </Typography>
-              <Typography
-                sx={{ color: "text.secondary", fontSize: "0.8rem", mt: 0.5 }}
-              >
-                {fb.created_at}
-              </Typography>
-            </Paper>
-          ))}
+            )}
+            <TextField
+              label="Ваш отзыв"
+              multiline
+              minRows={2}
+              maxRows={4}
+              value={text}
+              onChange={(e) => setText(e.target.value)}
+              fullWidth
+              required
+              size="small"
+            />
+            <Rating
+              name="rating"
+              value={rating}
+              onChange={(_, value) => setRating(value)}
+              size="medium"
+            />
+            <Button
+              type="submit"
+              variant="contained"
+              color="primary"
+              disabled={sending || !text || !rating}
+              sx={{ mt: 1, fontWeight: 600 }}
+            >
+              {sending ? "Отправка..." : "Отправить"}
+            </Button>
+          </Box>
+          <Box
+            sx={{
+              maxHeight: 350,
+              minHeight: 200,
+              overflowY: "auto",
+              textAlign: "left",
+              bgcolor: "transparent",
+              border: "none",
+              p: 0,
+            }}
+          >
+            {loading ? (
+              <Typography color="text.secondary">Загрузка...</Typography>
+            ) : feedbacks.length === 0 ? (
+              <Typography color="text.secondary">Пока нет отзывов</Typography>
+            ) : (
+              feedbacks.map((fb) => (
+                <Paper
+                  key={fb.id}
+                  sx={{
+                    p: 2,
+                    mb: 2,
+                    bgcolor: "background.paper",
+                    borderRadius: 2,
+                    border: "1px solid",
+                    borderColor: "divider",
+                  }}
+                >
+                  <Typography sx={{ fontWeight: 600, color: "primary.main", display: 'flex', alignItems: 'center', gap: 1 }}>
+                    {userInfos[fb.userId]?.avatarUrl && (
+                      <Avatar src={userInfos[fb.userId].avatarUrl} alt={userInfos[fb.userId].name || fb.userId + "_avatar"} sx={{ width: 24, height: 24 }} />
+                    )}
+                    {userInfos[fb.userId]?.name || fb.userId || "Пользователь"}
+                  </Typography>
+                  <Rating value={fb.rating} readOnly size="small" />
+                  <Typography sx={{ fontSize: "0.95rem", mt: 1 }}>
+                    {fb.text}
+                  </Typography>
+                  <Typography
+                    sx={{ color: "text.secondary", fontSize: "0.8rem", mt: 0.5 }}
+                  >
+                    {fb.created_at}
+                  </Typography>
+                </Paper>
+              ))
+            )}
+          </Box>
         </Box>
       </Paper>
     </Box>
