@@ -86,3 +86,19 @@ export function getAdminUserTournamentFeedback(userId, token) {
       headers: { Authorization: `Bearer ${token}` },
   });
 }
+
+export const formatTimestamp = (timestamp) => {
+  if (!timestamp) return "";
+  try {
+    const date = new Date(timestamp);
+    return date.toLocaleString({
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+  } catch {
+    return timestamp;
+  }
+};

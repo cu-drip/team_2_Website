@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { useAuth } from "../AuthContext";
-import { getAdminUserMatchFeedback, getAdminUserTournamentFeedback, getUserById } from "../constants";
+import { getAdminUserMatchFeedback, getAdminUserTournamentFeedback, getUserById, formatTimestamp } from "../constants";
 import Box from "@mui/material/Box";
 import Paper from "@mui/material/Paper";
 import Typography from "@mui/material/Typography";
@@ -16,7 +16,7 @@ const mockMatchFeedbacks = [
     matchId: "match1",
     text: "Матч был отличным!",
     rating: 5,
-    created_at: "2024-07-01",
+    created_at: "2024-07-01T10:30:00.000000",
     type: "match",
   },
 ];
@@ -27,7 +27,7 @@ const mockTournamentFeedbacks = [
     tournamentId: "tournament1",
     text: "Турнир понравился!",
     rating: 4,
-    created_at: "2024-07-02",
+    created_at: "2024-07-02T14:45:00.000000",
     type: "tournament",
   },
 ];
@@ -103,7 +103,7 @@ export default function AdminUserFeedbacks() {
                 <Typography sx={{ fontWeight: 600, color: "primary.main" }}>Матч: {fb.matchId}</Typography>
                 <Rating value={fb.rating} readOnly size="small" />
                 <Typography sx={{ fontSize: "0.95rem", mt: 1 }}>{fb.text}</Typography>
-                <Typography sx={{ color: "text.secondary", fontSize: "0.8rem", mt: 0.5 }}>{fb.created_at}</Typography>
+                <Typography sx={{ color: "text.secondary", fontSize: "0.8rem", mt: 0.5 }}>{formatTimestamp(fb.created_at)}</Typography>
               </Paper>
             ))
           )}
@@ -122,7 +122,7 @@ export default function AdminUserFeedbacks() {
                 <Typography sx={{ fontWeight: 600, color: "primary.main" }}>Турнир: {fb.tournamentId}</Typography>
                 <Rating value={fb.rating} readOnly size="small" />
                 <Typography sx={{ fontSize: "0.95rem", mt: 1 }}>{fb.text}</Typography>
-                <Typography sx={{ color: "text.secondary", fontSize: "0.8rem", mt: 0.5 }}>{fb.created_at}</Typography>
+                <Typography sx={{ color: "text.secondary", fontSize: "0.8rem", mt: 0.5 }}>{formatTimestamp(fb.created_at)}</Typography>
               </Paper>
             ))
           )}

@@ -27,6 +27,7 @@ createRoot(document.getElementById("root")).render(
                 
                 <Route element={<ProtectedLayout />}>
                   <Route path="/profile" element={<Profile />} />
+
                   <Route path="/feedback/match/:id" element={<Feedback type='match' />} />
                   <Route path="/feedback/tournament/:id" element={<Feedback type='tournament' />} />
                   <Route path="/admin/feedback/:userId" element={<AdminUserFeedbacks />} />

@@ -13,6 +13,7 @@ import {
   getTournamentFeedback,
   postTournamentFeedback,
   getUserById,
+  formatTimestamp,
 } from "../constants";
 import Avatar from "@mui/material/Avatar";
 
@@ -23,14 +24,14 @@ const mockFeedbacks = [
     userId: "user1",
     text: "Отличная игра!",
     rating: 5,
-    created_at: "2024-07-01",
+    created_at: "2024-07-01T10:30:00.000000",
   },
   {
     id: "2",
     userId: "user2",
     text: "Было интересно, но можно лучше.",
     rating: 4,
-    created_at: "2024-07-02",
+    created_at: "2024-07-02T14:45:00.000000",
   },
 ];
 
@@ -280,7 +281,7 @@ export default function Feedback({ type }) {
                   <Typography
                     sx={{ color: "text.secondary", fontSize: "0.8rem", mt: 0.5 }}
                   >
-                    {fb.created_at}
+                    {formatTimestamp(fb.created_at)}
                   </Typography>
                 </Paper>
               ))
