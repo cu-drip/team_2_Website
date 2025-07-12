@@ -7,8 +7,8 @@ import TextField from "@mui/material/TextField";
 import Rating from "@mui/material/Rating";
 import Pagination from "@mui/material/Pagination";
 import { useParams } from "react-router-dom";
-import { useAuth } from "../AuthContext";
-import { formatTimestamp, getMatchFeedback, getTournamentFeedback, getUserById, postMatchFeedback, postTournamentFeedback } from "../constants";
+import { useAuth } from "../../contexts/auth/AuthContext.js";
+import { formatTimestamp, getMatchFeedback, getTournamentFeedback, getUserById, postMatchFeedback, postTournamentFeedback } from "../../constants.js";
 import Avatar from "@mui/material/Avatar";
 
 const mockFeedbacks = [
@@ -18,76 +18,6 @@ const mockFeedbacks = [
         text: "Отличная игра!",
         rating: 5,
         created_at: "2024-07-01T10:30:00.000000",
-    },
-    {
-        id: "2",
-        userId: "user2",
-        text: "Было интересно, но можно лучше.",
-        rating: 4,
-        created_at: "2024-07-02T14:45:00.000000",
-    },
-    {
-        id: "2",
-        userId: "user2",
-        text: "Было интересно, но можно лучше.",
-        rating: 4,
-        created_at: "2024-07-02T14:45:00.000000",
-    },
-    {
-        id: "2",
-        userId: "user2",
-        text: "Было интересно, но можно лучше.",
-        rating: 4,
-        created_at: "2024-07-02T14:45:00.000000",
-    },
-    {
-        id: "2",
-        userId: "user2",
-        text: "Было интересно, но можно лучше.",
-        rating: 4,
-        created_at: "2024-07-02T14:45:00.000000",
-    },
-    {
-        id: "2",
-        userId: "user2",
-        text: "Было интересно, но можно лучше.",
-        rating: 4,
-        created_at: "2024-07-02T14:45:00.000000",
-    },
-    {
-        id: "2",
-        userId: "user2",
-        text: "Было интересно, но можно лучше.",
-        rating: 4,
-        created_at: "2024-07-02T14:45:00.000000",
-    },
-    {
-        id: "2",
-        userId: "user2",
-        text: "Было интересно, но можно лучше.",
-        rating: 4,
-        created_at: "2024-07-02T14:45:00.000000",
-    },
-    {
-        id: "2",
-        userId: "user2",
-        text: "Было интересно, но можно лучше.",
-        rating: 4,
-        created_at: "2024-07-02T14:45:00.000000",
-    },
-    {
-        id: "2",
-        userId: "user2",
-        text: "Было интересно, но можно лучше.",
-        rating: 4,
-        created_at: "2024-07-02T14:45:00.000000",
-    },
-    {
-        id: "2",
-        userId: "user2",
-        text: "Было интересно, но можно лучше.",
-        rating: 4,
-        created_at: "2024-07-02T14:45:00.000000",
     },
     {
         id: "2",
@@ -227,7 +157,7 @@ export default function Feedback({ type }) {
             sx={{
                 height: "100%",
                 bgcolor: "background.default",
-                p: { xs: 2, sm: 4 },
+                p: { xs: 1, sm: 4 },
                 display: "flex",
                 flexDirection: "column",
                 gap: 3,
@@ -249,13 +179,16 @@ export default function Feedback({ type }) {
             <Paper
                 elevation={3}
                 sx={{
-                    p: { xs: 3, sm: 4 },
+                    p: { xs: 2, sm: 4 },
                     borderRadius: 2,
                     bgcolor: "background.paper",
                     border: "1px solid",
                     borderColor: "divider",
                     maxWidth: "1200px",
+                    width: "100%",
                     mx: "auto",
+                    boxSizing: "border-box",
+                    minWidth: 0,
                 }}
             >
                 {/* Input Section */}

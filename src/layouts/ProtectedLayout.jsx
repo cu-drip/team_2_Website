@@ -1,6 +1,6 @@
 import React from "react";
 import { Outlet, useLocation } from "react-router-dom";
-import { useAuth } from "../AuthContext";
+import { useAuth } from "../contexts/auth/AuthContext.js";
 import UnauthorizedProvider from "../components/UnauthorizedProvider";
 import CircularProgress from "@mui/material/CircularProgress";
 import Box from "@mui/material/Box";

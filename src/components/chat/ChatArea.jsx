@@ -1,27 +1,21 @@
 import React, { useEffect, useRef, useState } from "react";
-import { useParams } from "react-router-dom";
-import { useAuth } from "../AuthContext";
-import { useCustomNavigate } from "../components/useCustomNavigate";
-import { formatTimestamp, getChatMessages, getChatUsers, getWebSocketUrl } from "../constants";
+import { useAuth } from "../../contexts/auth/AuthContext.js";
+import { formatTimestamp, getChatMessages, getChatUsers, getWebSocketUrl } from "../../constants.js";
 import Box from "@mui/material/Box";
-import Paper from "@mui/material/Paper";
 import Typography from "@mui/material/Typography";
-import Button from "@mui/material/Button";
 import TextField from "@mui/material/TextField";
 import Avatar from "@mui/material/Avatar";
 import CircularProgress from "@mui/material/CircularProgress";
 import Alert from "@mui/material/Alert";
-import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import SendIcon from "@mui/icons-material/Send";
+import ChatIcon from "@mui/icons-material/Chat";
 import IconButton from "@mui/material/IconButton";
 import Divider from "@mui/material/Divider";
 import List from "@mui/material/List";
 import ListItem from "@mui/material/ListItem";
 
-export default function Chat() {
-    const { chatId, chatName } = useParams();
+export default function ChatArea({ selectedChat }) {
     const { user, accessToken } = useAuth();
-    const customNavigate = useCustomNavigate();
 
     const [messages, setMessages] = useState([]);
     const [chatUsers, setChatUsers] = useState([]);
@@ -43,12 +37,19 @@ export default function Chat() {
     }, [messages]);
 
     useEffect(() => {
+        if (!selectedChat) {
+            setMessages([]);
+            setChatUsers([]);
+            setLoading(false);
+            return;
+        }
+
         async function fetchChatData() {
             setLoading(true);
             setError(null);
 
             try {
-                const [messagesRes, usersRes] = await Promise.all([getChatMessages(chatId, accessToken), getChatUsers(chatId, accessToken)]);
+                const [messagesRes, usersRes] = await Promise.all([getChatMessages(selectedChat.id, accessToken), getChatUsers(selectedChat.id, accessToken)]);
 
                 setMessages(messagesRes.data || []);
                 setChatUsers(usersRes.data || []);
@@ -85,15 +86,15 @@ export default function Chat() {
             }
         }
 
-        if (accessToken && chatId) {
+        if (accessToken && selectedChat) {
             fetchChatData();
         }
-    }, [chatId, accessToken, user?.id, user?.name]);
+    }, [selectedChat, accessToken, user?.id, user?.name]);
 
     useEffect(() => {
         // WebSocket connection
-        if (accessToken && chatId && !wsRef.current) {
-            const wsUrl = getWebSocketUrl(chatId);
+        if (accessToken && selectedChat && !wsRef.current) {
+            const wsUrl = getWebSocketUrl(selectedChat.id);
             const ws = new WebSocket(wsUrl, [], {
                 headers: {
                     Authorization: `Bearer ${accessToken}`,
@@ -133,11 +134,7 @@ export default function Chat() {
                 wsRef.current = null;
             }
         };
-    }, [chatId, accessToken]);
-
-    const handleBackToChats = () => {
-        customNavigate("/chats");
-    };
+    }, [selectedChat, accessToken]);
 
     const handleSendMessage = async () => {
         if (!newMessage.trim() || !wsRef.current || wsConnected === false) {
@@ -176,6 +173,33 @@ export default function Chat() {
         return message.author === user?.id;
     };
 
+    if (!selectedChat) {
+        return (
+            <Box
+                sx={{
+                    height: "100%",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    bgcolor: "background.default",
+                }}
+            >
+                <Box sx={{ textAlign: "center", p: 3 }}>
+                    <ChatIcon sx={{ fontSize: 80, color: "text.secondary", mb: 3, opacity: 0.5 }} />
+                    <Typography variant="h5" color="text.secondary" sx={{ mb: 2, fontWeight: 600 }}>
+                        Добро пожаловать в чат
+                    </Typography>
+                    <Typography variant="body1" color="text.secondary" sx={{ mb: 3, maxWidth: 400 }}>
+                        Выберите чат из списка слева или создайте новый для начала общения
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary" sx={{ opacity: 0.7 }}>
+                        Здесь вы можете общаться с участниками турниров и матчей
+                    </Typography>
+                </Box>
+            </Box>
+        );
+    }
+
     if (loading) {
         return (
             <Box
@@ -187,7 +211,7 @@ export default function Chat() {
                     bgcolor: "background.default",
                 }}
             >
-                <CircularProgress color="primary" size={60} thickness={4} />
+                <CircularProgress color="primary" size={40} thickness={4} />
             </Box>
         );
     }
@@ -196,41 +220,38 @@ export default function Chat() {
         <Box
             sx={{
                 height: "100%",
-                bgcolor: "background.default",
-                p: { xs: 1, sm: 2 },
                 display: "flex",
                 flexDirection: "column",
-                gap: 2,
+                bgcolor: "background.default",
             }}
         >
             {/* Header */}
             <Box
                 sx={{
+                    p: 2,
+                    borderBottom: "1px solid",
+                    borderColor: "divider",
+                    bgcolor: "background.paper",
                     display: "flex",
                     alignItems: "center",
-                    gap: 2,
-                    mb: 1,
+                    justifyContent: "space-between",
                 }}
             >
-                <Button variant="outlined" startIcon={<ArrowBackIcon />} onClick={handleBackToChats} sx={{ fontWeight: 600 }}>
-                    Назад к чатам
-                </Button>
                 <Typography
-                    variant="h5"
+                    variant="h6"
                     sx={{
                         color: "primary.main",
                         fontWeight: 700,
-                        fontSize: { xs: "1.2rem", sm: "1.5rem" },
+                        fontSize: "1.2rem",
                     }}
                 >
-                    {decodeURIComponent(chatName || `Чат #${chatId}`)}
+                    {selectedChat.name}
                 </Typography>
                 <Box
                     sx={{
                         display: "flex",
                         alignItems: "center",
                         gap: 1,
-                        ml: "auto",
                     }}
                 >
                     <Box
@@ -248,89 +269,83 @@ export default function Chat() {
             </Box>
 
             {error && (
-                <Alert severity="error" sx={{ mb: 2 }}>
+                <Alert severity="error" sx={{ m: 2 }}>
                     {error}
                 </Alert>
             )}
 
-            {/* Chat Container */}
-            <Paper
-                elevation={3}
+            {/* Messages Area */}
+            <Box
                 sx={{
                     flex: 1,
-                    display: "flex",
-                    flexDirection: "column",
-                    bgcolor: "background.paper",
-                    border: "1px solid",
-                    borderColor: "divider",
-                    overflow: "hidden",
+                    overflow: "auto",
+                    p: 2,
                 }}
             >
-                {/* Messages Area */}
-                <Box
-                    sx={{
-                        flex: 1,
-                        overflow: "auto",
-                        p: 2,
-                    }}
-                >
-                    {messages.length === 0 ? (
-                        <Box
-                            sx={{
-                                display: "flex",
-                                flexDirection: "column",
-                                alignItems: "center",
-                                justifyContent: "center",
-                                height: "100%",
-                                textAlign: "center",
-                            }}
-                        >
-                            <Typography variant="h6" color="text.secondary" sx={{ mb: 2 }}>
-                                Нет сообщений
-                            </Typography>
-                            <Typography variant="body2" color="text.secondary">
-                                Начните разговор, отправив первое сообщение
-                            </Typography>
-                        </Box>
-                    ) : (
-                        <List sx={{ p: 0 }}>
-                            {messages.map((message, index) => (
-                                <ListItem
-                                    key={message.id || index}
+                {messages.length === 0 ? (
+                    <Box
+                        sx={{
+                            display: "flex",
+                            flexDirection: "column",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            height: "100%",
+                            textAlign: "center",
+                        }}
+                    >
+                        <Typography variant="h6" color="text.secondary" sx={{ mb: 2 }}>
+                            Нет сообщений
+                        </Typography>
+                        <Typography variant="body2" color="text.secondary">
+                            Начните разговор, отправив первое сообщение
+                        </Typography>
+                    </Box>
+                ) : (
+                    <List sx={{ p: 0 }}>
+                        {messages.map((message, index) => (
+                            <ListItem
+                                key={message.id || index}
+                                sx={{
+                                    display: "flex",
+                                    flexDirection: "column",
+                                    alignItems: isOwnMessage(message) ? "flex-end" : "flex-start",
+                                    p: 0,
+                                    mb: 2,
+                                }}
+                            >
+                                <Box
                                     sx={{
                                         display: "flex",
-                                        flexDirection: "column",
-                                        alignItems: isOwnMessage(message) ? "flex-end" : "flex-start",
-                                        p: 0,
-                                        mb: 2,
+                                        alignItems: "flex-end",
+                                        gap: 1,
+                                        maxWidth: "70%",
+                                        flexDirection: isOwnMessage(message) ? "row-reverse" : "row",
                                     }}
                                 >
+                                    {!isOwnMessage(message) && <Avatar sx={{ width: 32, height: 32, fontSize: "0.8rem" }}>{getUserName(message.author).charAt(0).toUpperCase()}</Avatar>}
                                     <Box
                                         sx={{
-                                            display: "flex",
-                                            alignItems: "flex-end",
-                                            gap: 1,
-                                            maxWidth: "70%",
-                                            flexDirection: isOwnMessage(message) ? "row-reverse" : "row",
+                                            bgcolor: isOwnMessage(message) ? "primary.main" : "background.paper",
+                                            color: isOwnMessage(message) ? "white" : "text.primary",
+                                            borderRadius: 2,
+                                            p: 1.5,
+                                            border: isOwnMessage(message) ? "none" : "1px solid",
+                                            borderColor: "divider",
+                                            maxWidth: "100%",
                                         }}
                                     >
-                                        {!isOwnMessage(message) && <Avatar sx={{ width: 32, height: 32, fontSize: "0.8rem" }}>{getUserName(message.author).charAt(0).toUpperCase()}</Avatar>}
                                         <Box
                                             sx={{
-                                                bgcolor: isOwnMessage(message) ? "primary.main" : "background.default",
-                                                color: isOwnMessage(message) ? "white" : "text.primary",
-                                                borderRadius: 2,
-                                                p: 1.5,
-                                                border: isOwnMessage(message) ? "none" : "1px solid",
-                                                borderColor: "divider",
-                                                maxWidth: "100%",
+                                                display: "flex",
+                                                alignItems: "center",
+                                                gap: 1,
+                                                mb: 0.5,
                                             }}
                                         >
                                             <Typography
                                                 variant="body2"
                                                 sx={{
                                                     fontWeight: 600,
-                                                    mb: 0.5,
                                                     fontSize: "0.8rem",
                                                     opacity: 0.8,
                                                 }}
@@ -338,79 +353,79 @@ export default function Chat() {
                                                 {getUserName(message.author)}
                                             </Typography>
                                             <Typography
-                                                variant="body1"
-                                                sx={{
-                                                    wordBreak: "break-word",
-                                                    lineHeight: 1.4,
-                                                }}
-                                            >
-                                                {message.content}
-                                            </Typography>
-                                            <Typography
                                                 variant="caption"
                                                 sx={{
                                                     opacity: 0.7,
-                                                    display: "block",
-                                                    mt: 0.5,
+                                                    fontSize: "0.7rem",
                                                 }}
                                             >
                                                 {formatTimestamp(message.createdAt)}
                                             </Typography>
                                         </Box>
+                                        <Typography
+                                            variant="body1"
+                                            sx={{
+                                                wordBreak: "break-word",
+                                                lineHeight: 1.4,
+                                            }}
+                                        >
+                                            {message.content}
+                                        </Typography>
                                     </Box>
-                                </ListItem>
-                            ))}
-                            <div ref={messagesEndRef} />
-                        </List>
-                    )}
-                </Box>
+                                </Box>
+                            </ListItem>
+                        ))}
+                        <div ref={messagesEndRef} />
+                    </List>
+                )}
+            </Box>
 
-                <Divider />
+            <Divider />
 
-                {/* Input Area */}
-                <Box
+            {/* Input Area */}
+            <Box
+                sx={{
+                    p: 2,
+                    display: "flex",
+                    gap: 1,
+                    alignItems: "flex-end",
+                    bgcolor: "background.paper",
+                }}
+            >
+                <TextField
+                    fullWidth
+                    multiline
+                    maxRows={4}
+                    value={newMessage}
+                    onChange={(e) => setNewMessage(e.target.value)}
+                    onKeyDown={handleKeyPress}
+                    placeholder="Введите сообщение..."
+                    disabled={!wsConnected}
                     sx={{
-                        p: 2,
-                        display: "flex",
-                        gap: 1,
-                        alignItems: "flex-end",
+                        "& .MuiOutlinedInput-root": {
+                            borderRadius: 2,
+                        },
+                    }}
+                />
+                <IconButton
+                    color="primary"
+                    onClick={handleSendMessage}
+                    disabled={!newMessage.trim() || !wsConnected || sending}
+                    sx={{
+                        bgcolor: "primary.main",
+                        color: "white",
+                        "&:hover": {
+                            bgcolor: "primary.dark",
+                        },
+                        "&:disabled": {
+                            bgcolor: "action.disabledBackground",
+                            color: "action.disabled",
+                        },
                     }}
                 >
-                    <TextField
-                        fullWidth
-                        multiline
-                        maxRows={4}
-                        value={newMessage}
-                        onChange={(e) => setNewMessage(e.target.value)}
-                        onKeyDown={handleKeyPress}
-                        placeholder="Введите сообщение..."
-                        disabled={!wsConnected}
-                        sx={{
-                            "& .MuiOutlinedInput-root": {
-                                borderRadius: 2,
-                            },
-                        }}
-                    />
-                    <IconButton
-                        color="primary"
-                        onClick={handleSendMessage}
-                        disabled={!newMessage.trim() || !wsConnected || sending}
-                        sx={{
-                            bgcolor: "primary.main",
-                            color: "white",
-                            "&:hover": {
-                                bgcolor: "primary.dark",
-                            },
-                            "&:disabled": {
-                                bgcolor: "action.disabledBackground",
-                                color: "action.disabled",
-                            },
-                        }}
-                    >
-                        <SendIcon />
-                    </IconButton>
-                </Box>
-            </Paper>
+                    <SendIcon />
+                </IconButton>
+            </Box>
         </Box>
     );
 }

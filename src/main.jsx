@@ -4,21 +4,20 @@ import "./index.css";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 
 import NotFound from "./routes/NotFound";
-import Profile from "./routes/Profile";
+import Profile from "./routes/auth/Profile.jsx";
 import Home from "./routes/Home";
-import Feedback from "./routes/Feedback";
-import AdminUserFeedbacks from "./routes/AdminUserFeedbacks";
-import Login from "./routes/Login";
-import Register from "./routes/Register";
-import ChatList from "./routes/ChatList";
-import Chat from "./routes/Chat";
-import CreateChat from "./routes/CreateChat";
+import Feedback from "./routes/feedback/Feedback.jsx";
+import AdminUserFeedbacks from "./routes/feedback/AdminUserFeedbacks.jsx";
+import Login from "./routes/auth/Login.jsx";
+import Register from "./routes/auth/Register.jsx";
+import UnifiedChat from "./routes/chat/UnifiedChat.jsx";
+import CreateChat from "./routes/chat/CreateChat";
 import { CookiesProvider } from "react-cookie";
 import darkTheme from "./theme";
 import { ThemeProvider } from "@emotion/react";
-import { AuthProvider } from "./layouts/AuthProvider";
+import { AuthProvider } from "./contexts/auth/AuthProvider.jsx";
 import ProtectedLayout from "./layouts/ProtectedLayout";
-import { CustomNavigateProvider } from "./components/CustomNavigateProvider";
+import { CustomNavigateProvider } from "./contexts/navigation/CustomNavigateProvider.jsx";
 
 createRoot(document.getElementById("root")).render(
     <StrictMode>
@@ -39,9 +38,9 @@ createRoot(document.getElementById("root")).render(
                                     <Route path="/feedback/tournament/:id" element={<Feedback type="tournament" />} />
                                     <Route path="/admin/feedback/:userId" element={<AdminUserFeedbacks />} />
 
-                                    <Route path="/chats" element={<ChatList />} />
+                                    <Route path="/chats" element={<UnifiedChat />} />
+                                    <Route path="/chats/:chatId/:chatName" element={<UnifiedChat />} />
                                     <Route path="/chat/create" element={<CreateChat />} />
-                                    <Route path="/chat/:chatId/:chatName" element={<Chat />} />
                                 </Route>
 
                                 <Route path="*" element={<NotFound />} />

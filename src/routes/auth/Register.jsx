@@ -8,7 +8,7 @@ import Button from "@mui/material/Button";
 import Link from "@mui/material/Link";
 import Alert from "@mui/material/Alert";
 import CircularProgress from "@mui/material/CircularProgress";
-import { register } from "../constants";
+import { register } from "../../constants.js";
 
 export default function Register() {
     const [formData, setFormData] = useState({
@@ -183,7 +183,7 @@ export default function Register() {
                         <Typography variant="body2" color="text.secondary">
                             Already have an account?{" "}
                             <Link
-                                href="/login"
+                                href="/src/routes/auth/Login"
                                 sx={{
                                     color: "primary.main",
                                     textDecoration: "none",

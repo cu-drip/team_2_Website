@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
-import { getProfile } from "../constants";
-import { AuthContext } from "../AuthContext";
+import { getProfile } from "../../constants.js";
+import { AuthContext } from "./AuthContext.js";
 
 // Mock user data for demo purposes
 const mockUser = {

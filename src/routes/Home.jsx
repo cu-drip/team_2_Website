@@ -1,6 +1,6 @@
 import React from "react";
-import { useAuth } from "../AuthContext";
-import { useCustomNavigate } from "../components/useCustomNavigate";
+import { useAuth } from "../contexts/auth/AuthContext.js";
+import { useCustomNavigate } from "../contexts/navigation/useCustomNavigate.js";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import Button from "@mui/material/Button";

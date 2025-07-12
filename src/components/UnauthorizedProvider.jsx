@@ -4,7 +4,7 @@ import Paper from "@mui/material/Paper";
 import Typography from "@mui/material/Typography";
 import Button from "@mui/material/Button";
 import LockOutlinedIcon from "@mui/icons-material/LockOutlined";
-import { useCustomNavigate } from "./useCustomNavigate";
+import { useCustomNavigate } from "../contexts/navigation/useCustomNavigate.js";
 
 export default function UnauthorizedProvider() {
     const customNavigate = useCustomNavigate();

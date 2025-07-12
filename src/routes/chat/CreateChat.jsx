@@ -1,7 +1,7 @@
 import { useState } from "react";
-import { useAuth } from "../AuthContext";
-import { useCustomNavigate } from "../components/useCustomNavigate";
-import { createChat, getUserById } from "../constants";
+import { useAuth } from "../../contexts/auth/AuthContext";
+import { useCustomNavigate } from "../../contexts/navigation/useCustomNavigate";
+import { createChat, getUserById } from "../../constants";
 import Box from "@mui/material/Box";
 import Paper from "@mui/material/Paper";
 import Typography from "@mui/material/Typography";
@@ -91,9 +91,9 @@ export default function CreateChat() {
             const response = await createChat(chatData, accessToken);
 
             if (response.data) {
-                // Navigate to the new chat
+                // Navigate to the newly created chat
                 const newChat = response.data;
-                customNavigate(`/chat/${newChat.id}/${encodeURIComponent(newChat.name)}`);
+                customNavigate(`/chats/${newChat.id}/${encodeURIComponent(newChat.name)}`);
             }
         } catch {
             setError("Ошибка создания чата");

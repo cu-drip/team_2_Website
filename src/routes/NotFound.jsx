@@ -3,7 +3,7 @@ import Box from "@mui/material/Box";
 import Paper from "@mui/material/Paper";
 import Typography from "@mui/material/Typography";
 import Button from "@mui/material/Button";
-import { useCustomNavigate } from "../components/useCustomNavigate";
+import { useCustomNavigate } from "../contexts/navigation/useCustomNavigate.js";
 
 export default function NotFound() {
     const customNavigate = useCustomNavigate();

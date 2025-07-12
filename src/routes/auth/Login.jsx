@@ -8,8 +8,8 @@ import Button from "@mui/material/Button";
 import Link from "@mui/material/Link";
 import Alert from "@mui/material/Alert";
 import CircularProgress from "@mui/material/CircularProgress";
-import { getProfile, login } from "../constants";
-import { useAuth } from "../AuthContext";
+import { getProfile, login } from "../../constants.js";
+import { useAuth } from "../../contexts/auth/AuthContext.js";
 
 export default function Login() {
     const [email, setEmail] = useState("");
@@ -153,7 +153,7 @@ export default function Login() {
                         <Typography variant="body2" color="text.secondary">
                             Don't have an account?{" "}
                             <Link
-                                href="/register"
+                                href="/src/routes/auth/Register"
                                 sx={{
                                     color: "primary.main",
                                     textDecoration: "none",

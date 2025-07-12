@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-import { useAuth } from "../AuthContext";
-import { formatTimestamp, getAdminUserMatchFeedback, getAdminUserTournamentFeedback, getUserById } from "../constants";
+import { useAuth } from "../../contexts/auth/AuthContext.js";
+import { formatTimestamp, getAdminUserMatchFeedback, getAdminUserTournamentFeedback, getUserById } from "../../constants.js";
 import Box from "@mui/material/Box";
 import Paper from "@mui/material/Paper";
 import Typography from "@mui/material/Typography";
@@ -10,7 +10,7 @@ import Avatar from "@mui/material/Avatar";
 import Tabs from "@mui/material/Tabs";
 import Tab from "@mui/material/Tab";
 import Pagination from "@mui/material/Pagination";
-import { useCustomNavigate } from "../components/useCustomNavigate";
+import { useCustomNavigate } from "../../contexts/navigation/useCustomNavigate.js";
 
 export default function AdminUserFeedbacks() {
     const { userId } = useParams();
