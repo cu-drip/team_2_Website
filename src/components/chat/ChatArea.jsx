@@ -94,12 +94,8 @@ export default function ChatArea({ selectedChat }) {
     useEffect(() => {
         // WebSocket connection
         if (accessToken && selectedChat && !wsRef.current) {
-            const wsUrl = getWebSocketUrl(selectedChat.id);
-            const ws = new WebSocket(wsUrl, [], {
-                headers: {
-                    Authorization: `Bearer ${accessToken}`,
-                },
-            });
+            const wsUrl = getWebSocketUrl(selectedChat.id, accessToken);
+            const ws = new WebSocket(wsUrl);
 
             ws.onopen = () => {
                 console.log("WebSocket connected");

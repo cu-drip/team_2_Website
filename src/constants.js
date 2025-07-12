@@ -155,10 +155,10 @@ export function getChatMessages(chatId, token, limit = 100, after = null) {
 }
 
 // WebSocket connection helper
-export const WEBSOCKET_URL = "ws://localhost:8000/ws/chats";
+export const WEBSOCKET_URL = "ws://51.250.38.151:8000/ws/chats";
 
-export function getWebSocketUrl(chatId) {
-    return `${WEBSOCKET_URL}/${chatId}`;
+export function getWebSocketUrl(chatId, token) {
+    return `${WEBSOCKET_URL}/${chatId}?token=${token}`;
 }
 
 export const formatTimestamp = (timestamp) => {
