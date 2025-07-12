@@ -49,9 +49,9 @@ export const FEEDBACK_API = {
   ADMIN_USER_TOURNAMENTS: (userId) => `/api/v1/admin/users/${userId}/tournaments`,
 };
 
-export function getMatchFeedback(matchId, token) {
+export function getMatchFeedback(matchId, token, page = 0, size = 20) {
   return axios.get(`${BACKEND_URL}${FEEDBACK_API.MATCHES}`, {
-    params: { matchId },
+    params: { matchId, page, size },
     headers: { Authorization: `Bearer ${token}` },
   });
 }
@@ -62,9 +62,9 @@ export function postMatchFeedback(data, token) {
   });
 }
 
-export function getTournamentFeedback(tournamentId, token) {
+export function getTournamentFeedback(tournamentId, token, page = 0, size = 20) {
   return axios.get(`${BACKEND_URL}${FEEDBACK_API.TOURNAMENTS}`, {
-    params: { tournamentId },
+    params: { tournamentId, page, size },
     headers: { Authorization: `Bearer ${token}` },
   });
 }
@@ -75,15 +75,17 @@ export function postTournamentFeedback(data, token) {
   });
 }
 
-export function getAdminUserMatchFeedback(userId, token) {
+export function getAdminUserMatchFeedback(userId, token, page = 0, size = 20) {
   return axios.get(`${BACKEND_URL}${FEEDBACK_API.ADMIN_USER_MATCHES(userId)}`, {
+    params: { page, size },
     headers: { Authorization: `Bearer ${token}` },
   });
 }
 
-export function getAdminUserTournamentFeedback(userId, token) {
+export function getAdminUserTournamentFeedback(userId, token, page = 0, size = 20) {
   return axios.get(`${BACKEND_URL}${FEEDBACK_API.ADMIN_USER_TOURNAMENTS(userId)}`, {
-      headers: { Authorization: `Bearer ${token}` },
+    params: { page, size },
+    headers: { Authorization: `Bearer ${token}` },
   });
 }
 

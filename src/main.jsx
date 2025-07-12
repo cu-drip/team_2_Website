@@ -8,10 +8,12 @@ import Profile from "./routes/Profile";
 import Home from "./routes/Home";
 import Feedback from "./routes/Feedback";
 import AdminUserFeedbacks from "./routes/AdminUserFeedbacks";
+import Login from "./routes/Login";
+import Register from "./routes/Register";
 import { CookiesProvider } from "react-cookie";
 import darkTheme from "./theme";
 import { ThemeProvider } from "@emotion/react";
-import AuthProvider from "./layouts/AuthProvider";
+import { AuthProvider } from "./layouts/AuthProvider";
 import ProtectedLayout from "./layouts/ProtectedLayout";
 import { CustomNavigateProvider } from "./components/CustomNavigateProvider";
 
@@ -24,6 +26,8 @@ createRoot(document.getElementById("root")).render(
             <CustomNavigateProvider>
               <Routes>
                 <Route path="/" element={<Home />} />
+                <Route path="/login" element={<Login />} />
+                <Route path="/register" element={<Register />} />
                 
                 <Route element={<ProtectedLayout />}>
                   <Route path="/profile" element={<Profile />} />
