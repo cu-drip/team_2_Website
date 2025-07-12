@@ -1,64 +1,71 @@
 :root {
-  /* Фоны */
-  --color-bg-primary:      #121212;
-  --color-bg-secondary:    #1E1E1E;
-  --color-border:          #292929;
+    /* Фоны */
+    --color-bg-primary: #121212;
+    --color-bg-secondary: #1e1e1e;
+    --color-border: #292929;
 
-  /* Тексты */
-  --color-text-primary:    #E0E0E0;
-  --color-text-secondary:  #A3A3A3;
+    /* Тексты */
+    --color-text-primary: #e0e0e0;
+    --color-text-secondary: #a3a3a3;
 
-  /* Акценты */
-  --color-primary:         #BB86FC;
-  --color-secondary:       #03DAC6;
+    /* Акценты */
+    --color-primary: #bb86fc;
+    --color-secondary: #03dac6;
 
-  /* Статусы */
-  --color-success:         #4CAF50;
-  --color-warning:         #FB8C00;
-  --color-error:           #CF6679;
-  --color-info:            #2196F3;
+    /* Статусы */
+    --color-success: #4caf50;
+    --color-warning: #fb8c00;
+    --color-error: #cf6679;
+    --color-info: #2196f3;
 }
 
-html, body, #root {
-  background-color: var(--color-bg-primary);
-  color: var(--color-text-primary);
-  height: 100%;
-  margin: 0px;
+html,
+body,
+#root {
+    background-color: var(--color-bg-primary);
+    color: var(--color-text-primary);
+    height: 100vh;
+    margin: 0px;
+}
+
+#root {
+    display: flex;
+    flex-direction: column;
 }
 
 .auth-container {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100%;
 }
 
 .auth-credentials-container {
-  background-color: var(--color-border);
-  border-color: var(--color-border);
-  border-style: solid;
-  border-width: 3px;
-  border-radius: 15px;
+    background-color: var(--color-border);
+    border-color: var(--color-border);
+    border-style: solid;
+    border-width: 3px;
+    border-radius: 15px;
 
-  min-width: 300px;
-  min-height: 400px;
+    min-width: 300px;
+    min-height: 400px;
 
-  display: flex;
-  flex-direction: column;
+    display: flex;
+    flex-direction: column;
 
-  align-items: center;
-  justify-content: space-between;
+    align-items: center;
+    justify-content: space-between;
 }
 
 .auth-input-container {
-  display: flex;
-  flex-direction: column;
+    display: flex;
+    flex-direction: column;
 }
 
 .auth-credentials-container > * {
-  margin: 20px;
+    margin: 20px;
 }
 
 .auth-input-container > * {
-  margin: 5px;
+    margin: 5px;
 }
