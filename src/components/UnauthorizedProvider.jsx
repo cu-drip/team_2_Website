@@ -40,7 +40,7 @@ export default function UnauthorizedProvider() {
         </Typography>
         <Typography variant="body1" sx={{ color: 'text.secondary', mb: 4, fontSize: { xs: '1rem', sm: '1.1rem' } }}>
           Для просмотра этой страницы требуется авторизация.<br/>
-          Пожалуйста, войдите в систему или обновите страницу.
+          Пожалуйста, войдите в систему.
         </Typography>
         <Button
           variant="contained"
@@ -48,9 +48,9 @@ export default function UnauthorizedProvider() {
           size="large"
           fullWidth
           sx={{ py: 1.5, fontWeight: 600, mb: 2, fontSize: { xs: '1rem', sm: '1.1rem' } }}
-          onClick={() => window.location.reload()}
+          onClick={() => customNavigate('/login')}
         >
-          Обновить страницу
+          Войти в систему
         </Button>
         <Button
           variant="outlined"
