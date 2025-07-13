@@ -1,4 +1,4 @@
-import React from "react";
+import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import AppBar from "@mui/material/AppBar";
 import Toolbar from "@mui/material/Toolbar";
@@ -20,6 +20,7 @@ import Typography from "@mui/material/Typography";
 
 const baseNavLinks = [
     { label: "Главная", path: "/" },
+    { label: "Турниры", path: "/tournaments" },
     { label: "Чаты", path: "/chats" },
     { label: "Отзывы", path: "/feedback" },
 ];
@@ -29,8 +30,8 @@ export default function Navbar() {
     const location = useLocation();
     const { user, logout } = useAuth();
     const navLinks = user?.admin ? [...baseNavLinks, adminNavLink] : baseNavLinks;
-    const [anchorEl, setAnchorEl] = React.useState(null);
-    const [mobileMenuAnchor, setMobileMenuAnchor] = React.useState(null);
+    const [anchorEl, setAnchorEl] = useState(null);
+    const [mobileMenuAnchor, setMobileMenuAnchor] = useState(null);
     const theme = useTheme();
     const isMobile = useMediaQuery(theme.breakpoints.down("md"));
 

@@ -20,7 +20,7 @@ import { ThemeProvider } from "@emotion/react";
 import { AuthProvider } from "./contexts/auth/AuthProvider.jsx";
 import ProtectedLayout from "./layouts/ProtectedLayout";
 import { CustomNavigateProvider } from "./contexts/navigation/CustomNavigateProvider.jsx";
-import Tournaments from "./routes/Tournaments.jsx";
+import Tournaments from "./routes/tournaments/Tournaments.jsx";
 import TournamentDetails from "./routes/tournaments/TournamentDetails.jsx";
 
 createRoot(document.getElementById("root")).render(

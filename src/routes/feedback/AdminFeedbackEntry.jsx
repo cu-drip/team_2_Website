@@ -34,7 +34,7 @@ export default function AdminFeedbackEntry() {
     };
 
     return (
-        <Box sx={{ minHeight: "100vh", bgcolor: "background.default", display: "flex", alignItems: "center", justifyContent: "center", p: 2 }}>
+        <Box sx={{ height: "100%", bgcolor: "background.default", display: "flex", alignItems: "center", justifyContent: "center", p: 2 }}>
             <Paper sx={{ p: 4, borderRadius: 3, maxWidth: 400, width: "100%", bgcolor: "background.paper", boxShadow: 6 }}>
                 <Typography variant="h5" sx={{ fontWeight: 700, color: "primary.main", mb: 3, textAlign: "center" }}>
                     Просмотреть отзывы пользователя
