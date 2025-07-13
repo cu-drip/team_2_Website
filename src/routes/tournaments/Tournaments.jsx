@@ -13,6 +13,7 @@ import {
     Alert,
     Chip,
     Stack,
+    Button,
 } from "@mui/material";
 import SportsSoccerIcon from '@mui/icons-material/SportsSoccer';
 import SportsTennisIcon from '@mui/icons-material/SportsTennis';
@@ -25,6 +26,7 @@ import { useAuth } from "../../contexts/auth/AuthContext.js";
 import { getTournaments } from "../../constants.js";
 import { useCustomNavigate } from "../../contexts/navigation/useCustomNavigate.js";
 import { formatTimestamp } from "../../constants.js";
+import AddIcon from "@mui/icons-material/Add";
 
 const sportIcons = {
     FOOTBALL: <SportsSoccerIcon />,
@@ -83,9 +85,19 @@ export default function Tournaments() {
 
     return (
         <Box sx={{ height: "100%", bgcolor: "background.default", p: { xs: 2, md: 4 } }}>
-            <Typography variant="h4" align="center" sx={{ fontWeight: 700, mb: 4 }}>
-                Все турниры
-            </Typography>
+            <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 4 }}>
+                <Typography variant="h4" sx={{ fontWeight: 700 }}>
+                    Все турниры
+                </Typography>
+                <Button
+                    variant="contained"
+                    startIcon={<AddIcon />}
+                    onClick={() => navigate("/tournaments/create")}
+                    sx={{ fontWeight: 600 }}
+                >
+                    Создать турнир
+                </Button>
+            </Box>
 
             {error && (
                 <Alert severity="error" sx={{ mb: 4 }}>

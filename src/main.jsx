@@ -22,6 +22,7 @@ import ProtectedLayout from "./layouts/ProtectedLayout";
 import { CustomNavigateProvider } from "./contexts/navigation/CustomNavigateProvider.jsx";
 import Tournaments from "./routes/tournaments/Tournaments.jsx";
 import TournamentDetails from "./routes/tournaments/TournamentDetails.jsx";
+import CreateTournament from "./routes/tournaments/CreateTournament.jsx";
 
 createRoot(document.getElementById("root")).render(
     <StrictMode>
@@ -38,13 +39,15 @@ createRoot(document.getElementById("root")).render(
                                 <Route element={<ProtectedLayout />}>
                                     <Route path="/profile" element={<Profile />} />
 
+                                    <Route path="/tournaments" element={<Tournaments />} />
+                                    <Route path="/tournaments/create" element={<CreateTournament />} />
+                                    <Route path="/tournaments/:id" element={<TournamentDetails />} />
+
                                     <Route path="/feedback" element={<FeedbackEntry />} />
                                     <Route path="/feedback/match/:id" element={<Feedback type="match" />} />
                                     <Route path="/feedback/tournament/:id" element={<Feedback type="tournament" />} />
                                     <Route path="/admin/feedback" element={<AdminFeedbackEntry />} />
                                     <Route path="/admin/feedback/:userId" element={<AdminUserFeedbacks />} />
-                                    <Route path="/tournaments" element={<Tournaments />} />
-                                    <Route path="/tournaments/:id" element={<TournamentDetails />} />
 
                                     <Route path="/chats" element={<UnifiedChat />} />
                                     <Route path="/chats/:chatId/:chatName" element={<UnifiedChat />} />
