@@ -97,7 +97,10 @@ export default function TeamDetails() {
                 if (cancelled) return;
                 if (!teamRes) throw new Error("team");
 
-                setTeam(teamRes.data);
+                setTeam({
+                    ...teamRes.data,
+                    maxParticipants: teamRes.data.maxParticipants || 11,
+                });
                 const partArray = Array.isArray(partRes?.data) ? partRes.data : [];
                 setParticipants(partArray);
                 
@@ -253,7 +256,7 @@ export default function TeamDetails() {
         }
     };
 
-    const isTeamFull = participants.length >= team.maxParticipants;
+    const isTeamFull = participants.length >= (team.maxParticipants || 11);
 
     return (
         <Container maxWidth="lg" sx={{ py: 4 }}>
@@ -295,7 +298,7 @@ export default function TeamDetails() {
                         {[
                             ["Вид спорта", getSportLabel(team.sport)],
                             ["Создана", formatTimestamp(team.createdAt)],
-                            ["Участников", `${participants.length}/${team.maxParticipants}`],
+                            ["Участников", `${participants.length}/${team.maxParticipants || 11}`],
                             ["Владелец", team.owner || "—"],
                         ].map(([label, value]) => (
                             <Grid key={label} item xs={6} md={3}>
@@ -434,7 +437,7 @@ export default function TeamDetails() {
                             <Grid item xs={12} sm={6}>
                                 <Card sx={{ p: 2, textAlign: 'center' }}>
                                     <Typography variant="h4" color="secondary.main" sx={{ fontWeight: 700 }}>
-                                        {team.maxParticipants - participants.length}
+                                        {(team.maxParticipants || 11) - participants.length}
                                     </Typography>
                                     <Typography variant="body2" color="text.secondary">
                                         Свободных мест
@@ -453,13 +456,13 @@ export default function TeamDetails() {
                                                     bgcolor: 'primary.main', 
                                                     height: '100%', 
                                                     borderRadius: 1,
-                                                    width: `${(participants.length / team.maxParticipants) * 100}%`,
+                                                    width: `${(participants.length / (team.maxParticipants || 11)) * 100}%`,
                                                     transition: 'width 0.3s ease'
                                                 }} 
                                             />
                                         </Box>
                                         <Typography variant="body2" sx={{ fontWeight: 600 }}>
-                                            {Math.round((participants.length / team.maxParticipants) * 100)}%
+                                            {Math.round((participants.length / (team.maxParticipants || 11)) * 100)}%
                                         </Typography>
                                     </Box>
                                 </Card>

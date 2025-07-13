@@ -4,22 +4,23 @@ import { AuthContext } from "./AuthContext.js";
 
 // Mock user data for demo purposes
 const mockUser = {
-    id: "5375dc7e-8ef7-4384-b95a-9cddf4b713e2",
-    name: "Alexandr05",
-    surname: "Gileta",
-    patronymic: null,
-    phoneNumber: "88005553535",
-    email: "gileta_tenis3@ya.ru",
-    hashedPassword: "$2a$10$iXbqsAYjp40ZHP74dqzACemgeQAhnPP58fuxZGDiS3ePSXBxK2l9y",
-    dateOfBirth: "2025-07-09",
-    age: null,
-    sex: "Male",
-    weight: null,
-    height: null,
-    createdAt: "2025-07-09T15:46:17.189333",
-    bio: null,
-    avatarUrl: null,
-    admin: true,
+    "id": "9ab9a5d6-6183-4dc0-985e-bb45bc8a261e",
+    "name": "Legenda",
+    "surname": "Gachi",
+    "patronymic": "Muchi",
+    "phoneNumber": "+79164700635",
+    "email": "loshara@axorom.ru",
+    "hashedPassword": "$2a$10$KBH5R4SdlvZH3jr6RpWt0OMs37OOcQp0AAh9Qxl22Jswd.tNvTXh6",
+    "dateOfBirth": null,
+    "age": null,
+    "sex": "MALE",
+    "weight": null,
+    "height": null,
+    "createdAt": "2025-07-13T20:38:29.039685",
+    "bio": null,
+    "avatarUrl": "https://pic.rutubelist.ru/video/2024-11-30/92/73/92738020d441b41983088ef387969610.jpg",
+    "mmr": 100,
+    "admin": true
 };
 
 export const AuthProvider = ({ children }) => {

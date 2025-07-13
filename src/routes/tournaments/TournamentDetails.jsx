@@ -31,6 +31,7 @@ import {
   Tabs,
   Typography,
   MenuItem,
+  Chip,
 } from "@mui/material";
 import SportsSoccerIcon from "@mui/icons-material/SportsSoccer";
 import PeopleIcon from "@mui/icons-material/People";
@@ -39,6 +40,7 @@ import TableChartIcon from "@mui/icons-material/TableChart";
 import PersonAddIcon from "@mui/icons-material/PersonAdd";
 import PersonRemoveIcon from "@mui/icons-material/PersonRemove";
 import AdminPanelSettingsIcon from "@mui/icons-material/AdminPanelSettings";
+import PlayArrowIcon from "@mui/icons-material/PlayArrow";
 import { useAuth } from "../../contexts/auth/AuthContext.js";
 import {
   formatTimestamp,
@@ -51,6 +53,7 @@ import {
   unregisterParticipant,
   getTeams,
   getTeamParticipants,
+  createTour,
 } from "../../constants.js";
 import { useCustomNavigate } from "../../contexts/navigation/useCustomNavigate.js";
 
@@ -88,6 +91,11 @@ export default function TournamentDetails() {
   const [userTeams, setUserTeams] = useState([]); // Teams where user is a member
   const [selectedTeam, setSelectedTeam] = useState("");
   const [showTeamSelection, setShowTeamSelection] = useState(false);
+  
+  // New state for Competition Engine integration
+  const [tournamentExistsInEngine, setTournamentExistsInEngine] = useState(false);
+  const [engineLoading, setEngineLoading] = useState(false);
+  const [engineError, setEngineError] = useState(null);
 
   // Check if current user is registered
   const checkRegistrationStatus = () => {
@@ -109,16 +117,15 @@ export default function TournamentDetails() {
     async function fetchData() {
       setLoading(true);
       setError(null);
+      setEngineError(null);
       try {
         // Only fetch teams if tournament type is team
         const promises = [
           getTournament(id, accessToken).catch(() => null),
           getTournamentParticipants(id, accessToken).catch(() => null),
-          getTourMatches(id, accessToken).catch(() => null),
-          getBracket(id, accessToken).catch(() => null),
         ];
 
-        const [tourRes, partRes, matchRes, bracketRes] = await Promise.all(promises);
+        const [tourRes, partRes] = await Promise.all(promises);
 
         if (cancelled) return;
         if (!tourRes) throw new Error("tournament");
@@ -143,7 +150,11 @@ export default function TournamentDetails() {
                   return participantId === user?.id;
                 });
                 if (isUserMember) {
-                  userTeamsData.push(team);
+                  userTeamsData.push({
+                    ...team,
+                    currentParticipants: teamParticipants.length,
+                    maxParticipants: team.maxParticipants || 11,
+                  });
                 }
               } catch {
                 // Skip teams where we can't fetch participants
@@ -173,8 +184,36 @@ export default function TournamentDetails() {
           })
         );
         setParticipantInfos(infos);
-        setMatches(Array.isArray(matchRes?.data) ? matchRes.data : []);
-        setBracket(bracketRes?.data || null);
+
+        // Check if tournament exists in Competition Engine
+        try {
+          await getBracket(id, accessToken);
+          setTournamentExistsInEngine(true);
+          
+          // If tournament exists in engine, fetch matches and bracket
+          const [matchRes, bracketRes] = await Promise.all([
+            getTourMatches(id, accessToken).catch(() => ({ data: [] })),
+            getBracket(id, accessToken).catch(() => ({ data: null })),
+          ]);
+          
+          setMatches(Array.isArray(matchRes?.data) ? matchRes.data : []);
+          setBracket(bracketRes?.data || null);
+        } catch (err) {
+          if (err.response?.status === 404) {
+            setTournamentExistsInEngine(false);
+            setMatches([]);
+            setBracket(null);
+          } else {
+            // Other error, still try to fetch matches and bracket
+            setTournamentExistsInEngine(true);
+            const [matchRes, bracketRes] = await Promise.all([
+              getTourMatches(id, accessToken).catch(() => ({ data: [] })),
+              getBracket(id, accessToken).catch(() => ({ data: null })),
+            ]);
+            setMatches(Array.isArray(matchRes?.data) ? matchRes.data : []);
+            setBracket(bracketRes?.data || null);
+          }
+        }
       } catch {
         if (!cancelled) {
           setError("Ошибка загрузки данных, показываю демо");
@@ -245,10 +284,14 @@ export default function TournamentDetails() {
               },
             ];
             // Assume user is member of first two teams for demo
-            setUserTeams(demoTeams.slice(0, 2));
+            setUserTeams(demoTeams.slice(0, 2).map(team => ({
+              ...team,
+              currentParticipants: team.currentParticipants || 0,
+              maxParticipants: team.maxParticipants || 11,
+            })));
           }
 
-          // ---------- матчи ----------
+          // Demo matches and bracket
           const makeId = (n) =>
             `aaaaaaaa-aaaa-aaaa-aaaa-${n.toString().padStart(12, "0")}`;
 
@@ -346,6 +389,9 @@ export default function TournamentDetails() {
             typeGroup: "OLYMPIC",
             matches: [...r1, ...r2, ...r3, ...r4, final].map((m) => m.id),
           });
+          
+          // Demo tournaments exist in engine
+          setTournamentExistsInEngine(true);
         }
       } finally {
         if (!cancelled) setLoading(false);
@@ -362,6 +408,12 @@ export default function TournamentDetails() {
   const handleRegister = async () => {
     if (!user?.id) {
       setError("Необходимо войти в систему для регистрации");
+      return;
+    }
+
+    // Check if tournament exists in engine - if it does, registration is closed
+    if (tournamentExistsInEngine) {
+      setError("Регистрация закрыта - турнир уже создан в системе соревнований и матчи сформированы.");
       return;
     }
 
@@ -404,6 +456,13 @@ export default function TournamentDetails() {
       return;
     }
 
+    // Check if tournament exists in engine - if it does, registration is closed
+    if (tournamentExistsInEngine) {
+      setError("Регистрация закрыта - турнир уже создан в системе соревнований и матчи сформированы.");
+      setShowTeamSelection(false);
+      return;
+    }
+
     setRegistrationLoading(true);
     setError(null);
 
@@ -431,6 +490,12 @@ export default function TournamentDetails() {
       return;
     }
 
+    // Check if tournament exists in engine - if it does, unregistration is closed
+    if (tournamentExistsInEngine) {
+      setError("Отмена регистрации закрыта - турнир уже создан в системе соревнований и матчи сформированы.");
+      return;
+    }
+
     setRegistrationLoading(true);
     setError(null);
 
@@ -450,6 +515,49 @@ export default function TournamentDetails() {
       setError(err.response?.data?.message || "Ошибка отмены регистрации");
     } finally {
       setRegistrationLoading(false);
+    }
+  };
+
+  // Handle creating tournament in Competition Engine (admin only)
+  const handleCreateInEngine = async () => {
+    if (!user?.admin) {
+      setError("Только администраторы могут создавать турниры в системе соревнований");
+      return;
+    }
+
+    setEngineLoading(true);
+    setEngineError(null);
+
+    try {
+      await createTour({
+        ...tournament,
+
+        participants: participants,
+
+        // TODO: remove this when backend fixed
+        sport: tournament.sport.toUpperCase(),
+        typeTournament: tournament.typeTournament.toUpperCase(),
+        typeGroup: tournament.typeGroup.toUpperCase(), 
+        startTime: tournament.startTime + "Z", 
+        organizerId: tournament.organizedId,
+      }, accessToken);
+      
+      // Refresh engine status
+      setTournamentExistsInEngine(true);
+      
+      // Fetch matches and bracket
+      const [matchRes, bracketRes] = await Promise.all([
+        getTourMatches(id, accessToken).catch(() => ({ data: [] })),
+        getBracket(id, accessToken).catch(() => ({ data: null })),
+      ]);
+      
+      setMatches(Array.isArray(matchRes?.data) ? matchRes.data : []);
+      setBracket(bracketRes?.data || null);
+      
+    } catch (err) {
+      setEngineError(err.response?.data?.message || "Ошибка создания турнира в системе соревнований");
+    } finally {
+      setEngineLoading(false);
     }
   };
 
@@ -684,12 +792,30 @@ export default function TournamentDetails() {
             >
               Управление матчами
             </Button>
+            {!tournamentExistsInEngine && (
+              <Button
+                variant="outlined"
+                startIcon={<PlayArrowIcon />}
+                onClick={handleCreateInEngine}
+                disabled={engineLoading}
+                sx={{ fontWeight: 600 }}
+                color="success"
+              >
+                {engineLoading ? "Создание..." : "Создать в системе"}
+              </Button>
+            )}
           </Box>
         )}
       </Box>
       {error && (
         <Alert severity="error" sx={{ mb: 3 }}>
           {error}
+        </Alert>
+      )}
+      
+      {engineError && (
+        <Alert severity="error" sx={{ mb: 3 }}>
+          {engineError}
         </Alert>
       )}
 
@@ -728,6 +854,28 @@ export default function TournamentDetails() {
               </Grid>
             ))}
           </Grid>
+          
+          {/* Engine Status */}
+          <Box sx={{ mt: 2, display: "flex", alignItems: "center", gap: 1 }}>
+            <Typography variant="subtitle2" color="text.secondary">
+              Статус системы:
+            </Typography>
+            <Chip
+              label={tournamentExistsInEngine ? "Активен" : "Регистрация открыта"}
+              color={tournamentExistsInEngine ? "success" : "info"}
+              size="small"
+              variant="outlined"
+            />
+            {tournamentExistsInEngine ? (
+              <Typography variant="caption" color="text.secondary" sx={{ ml: 1 }}>
+                (Матчи и сетка доступны, регистрация закрыта)
+              </Typography>
+            ) : (
+              <Typography variant="caption" color="text.secondary" sx={{ ml: 1 }}>
+                (Матчи и сетка недоступны, регистрация открыта)
+              </Typography>
+            )}
+          </Box>
           <Box sx={{ mt: 2, display: "flex", alignItems: "center", gap: 2 }}>
             {user?.id ? (
               <>
@@ -737,7 +885,7 @@ export default function TournamentDetails() {
                     color="error"
                     startIcon={<PersonRemoveIcon />}
                     onClick={handleUnregister}
-                    disabled={registrationLoading}
+                    disabled={registrationLoading || tournamentExistsInEngine}
                     sx={{ fontWeight: 600 }}
                   >
                     {registrationLoading ? "Отмена..." : "Отменить регистрацию"}
@@ -748,7 +896,7 @@ export default function TournamentDetails() {
                     color="success"
                     startIcon={<PersonAddIcon />}
                     onClick={handleRegister}
-                    disabled={registrationLoading}
+                    disabled={registrationLoading || tournamentExistsInEngine}
                     sx={{ fontWeight: 600 }}
                   >
                     {registrationLoading
@@ -767,6 +915,15 @@ export default function TournamentDetails() {
                     ✓ Вы зарегистрированы
                   </Typography>
                 )}
+                {tournamentExistsInEngine && (
+                  <Typography
+                    variant="body2"
+                    color="warning.main"
+                    sx={{ fontWeight: 600 }}
+                  >
+                    ⚠ Регистрация закрыта - турнир создан в системе соревнований
+                  </Typography>
+                )}
               </>
             ) : (
               <Typography variant="body2" color="text.secondary">
@@ -780,7 +937,15 @@ export default function TournamentDetails() {
       <Card sx={{ boxShadow: 4, borderRadius: 2 }}>
         <Tabs
           value={tab}
-          onChange={(_, newVal) => setTab(newVal)}
+          onChange={(_, newVal) => {
+            // Prevent switching to disabled tabs
+            if (newVal === 1 || newVal === 2) {
+              if (!tournamentExistsInEngine) {
+                return;
+              }
+            }
+            setTab(newVal);
+          }}
           variant="fullWidth"
           indicatorColor="primary"
         >
@@ -788,8 +953,16 @@ export default function TournamentDetails() {
             icon={<PeopleIcon />}
             label={`Участники (${participants.length})`}
           />
-          <Tab icon={<TableChartIcon />} label={`Матчи (${matches.length})`} />
-          <Tab icon={<FormatListNumberedIcon />} label="Сетка" />
+          <Tab 
+            icon={<TableChartIcon />} 
+            label={`Матчи (${matches.length})`}
+            disabled={!tournamentExistsInEngine}
+          />
+          <Tab 
+            icon={<FormatListNumberedIcon />} 
+            label="Сетка"
+            disabled={!tournamentExistsInEngine}
+          />
         </Tabs>
 
         <TabPanel value={tab} index={0}>
@@ -817,7 +990,17 @@ export default function TournamentDetails() {
         </TabPanel>
 
         <TabPanel value={tab} index={1}>
-          {matches.length === 0 ? (
+          {!tournamentExistsInEngine ? (
+            <Box sx={{ textAlign: "center", py: 4 }}>
+              <Typography variant="h6" color="text.secondary" sx={{ mb: 2 }}>
+                Турнир не создан в системе соревнований
+              </Typography>
+              <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+                Матчи будут доступны после создания турнира в системе соревнований.
+                {user?.admin && " Используйте кнопку 'Создать в системе' выше."}
+              </Typography>
+            </Box>
+          ) : matches.length === 0 ? (
             <Typography color="text.secondary">Пока нет матчей</Typography>
           ) : (
             <Box sx={{ width: "100%", overflowX: "auto" }}>
@@ -864,30 +1047,42 @@ export default function TournamentDetails() {
         </TabPanel>
 
         <TabPanel value={tab} index={2}>
-          <Box
-            sx={{
-              overflowX: "auto",
-              px: 1,
-              /* webkit */
-              "&::-webkit-scrollbar": { height: 8 },
-              "&::-webkit-scrollbar-thumb": {
-                bgcolor: "primary.main",
-                borderRadius: 4,
-              },
-              "&::-webkit-scrollbar-track": {
-                bgcolor: "background.default",
-              },
-              /* firefox */
-              scrollbarWidth: "thin",
-              scrollbarColor: "primary.main transparent",
-            }}
-          >
-            {bracket ? (
-              bracketEl
-            ) : (
-              <Typography color="text.secondary">Сетка недоступна</Typography>
-            )}
-          </Box>
+          {!tournamentExistsInEngine ? (
+            <Box sx={{ textAlign: "center", py: 4 }}>
+              <Typography variant="h6" color="text.secondary" sx={{ mb: 2 }}>
+                Турнир не создан в системе соревнований
+              </Typography>
+              <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+                Сетка будет доступна после создания турнира в системе соревнований.
+                {user?.admin && " Используйте кнопку 'Создать в системе' выше."}
+              </Typography>
+            </Box>
+          ) : (
+            <Box
+              sx={{
+                overflowX: "auto",
+                px: 1,
+                /* webkit */
+                "&::-webkit-scrollbar": { height: 8 },
+                "&::-webkit-scrollbar-thumb": {
+                  bgcolor: "primary.main",
+                  borderRadius: 4,
+                },
+                "&::-webkit-scrollbar-track": {
+                  bgcolor: "background.default",
+                },
+                /* firefox */
+                scrollbarWidth: "thin",
+                scrollbarColor: "primary.main transparent",
+              }}
+            >
+              {bracket ? (
+                bracketEl
+              ) : (
+                <Typography color="text.secondary">Сетка недоступна</Typography>
+              )}
+            </Box>
+          )}
         </TabPanel>
       </Card>
 

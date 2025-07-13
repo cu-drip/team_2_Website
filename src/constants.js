@@ -25,7 +25,7 @@ export function formatTimestamp(timestamp) {
     }
 }
 
-export const BACKEND_URL = `http://51.250.38.151:8066`;
+export const BACKEND_URL = `http://51.250.38.151:8080`;
 
 // Auth API endpoints
 export const API = {
@@ -171,7 +171,7 @@ export function getChatMessages(chatId, token, limit = 100, after = null) {
 }
 
 // WebSocket connection helper
-export const WEBSOCKET_URL = "ws://51.250.38.151:8000/ws/chats";
+export const WEBSOCKET_URL = "ws://51.250.38.151:8086/ws/chats";
 
 export function getWebSocketUrl(chatId, token) {
     return `${WEBSOCKET_URL}/${chatId}?token=${token}`;
@@ -371,12 +371,12 @@ export function removeTeamParticipant(teamId, userId, token) {
 
 // Competition Engine API endpoints
 export const COMPETITION_API = {
-    TOURS: "/tour",
-    TOUR: (tourId) => `/tour/${tourId}`,
-    BRACKET: (tourId) => `/bracket/${tourId}`,
-    TOUR_MATCHES: (tourId) => `/tour/${tourId}/matches`,
-    TOUR_MATCH: (tourId, matchId) => `/tour/${tourId}/matches/${matchId}`,
-    MATCH: (matchId) => `/matches/${matchId}`,
+    TOURS: "/api/v1/tour",
+    TOUR: (tourId) => `/api/v1/tour/${tourId}`,
+    BRACKET: (tourId) => `/api/v1/bracket/${tourId}`,
+    TOUR_MATCHES: (tourId) => `/api/v1/tour/${tourId}/matches`,
+    TOUR_MATCH: (tourId, matchId) => `/api/v1/tour/${tourId}/matches/${matchId}`,
+    MATCH: (matchId) => `/api/v1/matches/${matchId}`,
 };
 
 // Tournament (Tour) management functions

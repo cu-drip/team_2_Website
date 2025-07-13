@@ -35,7 +35,7 @@ export default function Profile() {
     const quickActions = [...userQuickActions, ...(user?.admin ? adminQuickActions : [])];
 
     return (
-        <Box sx={{ minHeight: "100vh", bgcolor: "background.default", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "flex-start", py: { xs: 2, md: 6 }, px: 2 }}>
+        <Box sx={{ height: "100%", bgcolor: "background.default", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "flex-start", py: { xs: 2, md: 6 }, px: 2 }}>
             <Paper elevation={3} sx={{ width: "100%", maxWidth: 1200, p: { xs: 2, md: 4 }, borderRadius: 4, bgcolor: "background.paper", boxShadow: 6, mb: 4 }}>
                 {/* Header */}
                 <Box sx={{ textAlign: "center", mb: 4 }}>
@@ -46,7 +46,7 @@ export default function Profile() {
 
                 {/* User Info Card */}
                 <Box sx={{ mt: 4, mb: 4, display: "flex", flexDirection: "column", alignItems: "center", width: "100%" }}>
-                    <Avatar src={user?.avatarUrl || undefined} alt={user?.name || "User"} sx={{ width: 80, height: 80, mb: 2, bgcolor: "primary.main", fontSize: 36 }}>
+                    <Avatar src={user?.avatarUrl} alt={user?.name || "User"} sx={{ width: 80, height: 80, mb: 2, bgcolor: "primary.main", fontSize: 36 }}>
                         {user?.name ? user.name.charAt(0).toUpperCase() : "U"}
                     </Avatar>
                     <Typography variant="h6" sx={{ fontWeight: 700, mb: 1 }}>

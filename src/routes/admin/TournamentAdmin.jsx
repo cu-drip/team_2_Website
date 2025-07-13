@@ -162,7 +162,7 @@ export default function TournamentAdmin() {
     const [tab, setTab] = useState(0);
     const [editForm, setEditForm] = useState({});
     const [teams, setTeams] = useState([]);
-    const [_teamParticipants, setTeamParticipants] = useState({});
+    const [teamParticipants, setTeamParticipants] = useState({});
     const [addParticipantDialog, setAddParticipantDialog] = useState(false);
     const [newParticipantId, setNewParticipantId] = useState("");
     const [addingParticipant, setAddingParticipant] = useState(false);
@@ -921,7 +921,7 @@ export default function TournamentAdmin() {
                                                 </TableHead>
                                                 <TableBody>
                                                     {teams.map((team) => {
-                                                        const teamParticipants = teamParticipants[team.id] || [];
+                                                        const teamMembers = teamParticipants[team.id] || [];
                                                         const isRegistered = participants.some(p => (p.id || p) === team.id);
                                                         
                                                         return (
@@ -936,7 +936,7 @@ export default function TournamentAdmin() {
                                                                                 {team.name}
                                                                             </Typography>
                                                                             <Typography variant="caption" color="text.secondary">
-                                                                                {team.currentParticipants}/{team.maxParticipants} участников
+                                                                                {teamMembers.length}/{team.maxParticipants || 11} участников
                                                                             </Typography>
                                                                         </Box>
                                                                         {isRegistered && (
@@ -946,7 +946,7 @@ export default function TournamentAdmin() {
                                                                 </TableCell>
                                                                 <TableCell>
                                                                     <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5 }}>
-                                                                        {teamParticipants.slice(0, 5).map((member) => (
+                                                                        {teamMembers.slice(0, 5).map((member) => (
                                                                             <Chip
                                                                                 key={member.id}
                                                                                 label={member.name || `User ${member.id}`}
@@ -954,9 +954,9 @@ export default function TournamentAdmin() {
                                                                                 variant="outlined"
                                                                             />
                                                                         ))}
-                                                                        {teamParticipants.length > 5 && (
+                                                                        {teamMembers.length > 5 && (
                                                                             <Chip
-                                                                                label={`+${teamParticipants.length - 5}`}
+                                                                                label={`+${teamMembers.length - 5}`}
                                                                                 size="small"
                                                                                 variant="outlined"
                                                                             />
