@@ -164,7 +164,10 @@ export default function AdminUserFeedbacks() {
                     border: "1px solid",
                     borderColor: "divider",
                     maxWidth: "1200px",
+                    width: "100%",
                     mx: "auto",
+                    boxSizing: "border-box",
+                    minWidth: 0,
                 }}
             >
                 <Tabs
