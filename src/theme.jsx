@@ -1,25 +1,25 @@
-import { createTheme } from '@mui/material/styles';
+import { createTheme } from "@mui/material/styles";
 
 const darkTheme = createTheme({
     palette: {
-        mode: 'dark',
+        mode: "dark",
         background: {
-            default: '#0D1117',
-            paper: '#161B22',
+            default: "#0D1117",
+            paper: "#161B22",
         },
         primary: {
-            main: '#58A6FF',
-            dark: '#1F6FEB',
-            contrastText: '#FFFFFF',
+            main: "#58A6FF",
+            dark: "#1F6FEB",
+            contrastText: "#FFFFFF",
         },
-        divider: '#30363D',
+        divider: "#30363D",
         text: {
-            primary: '#C9D1D9',
-            secondary: '#8B949E',
+            primary: "#C9D1D9",
+            secondary: "#8B949E",
         },
         action: {
-            hover: '#2C313A',
-            selected: '#21262D',
+            hover: "#2C313A",
+            selected: "#21262D",
         },
     },
     components: {
