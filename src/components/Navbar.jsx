@@ -21,15 +21,18 @@ import Typography from "@mui/material/Typography";
 const baseNavLinks = [
     { label: "Главная", path: "/" },
     { label: "Турниры", path: "/tournaments" },
+    { label: "Команды", path: "/teams" },
     { label: "Чаты", path: "/chats" },
     { label: "Отзывы", path: "/feedback" },
 ];
-const adminNavLink = { label: "Отзывы Пользователя (admin)", path: "/admin/feedback" };
+const adminNavLinks = [
+    { label: "Админ панель", path: "/admin" }
+];
 
 export default function Navbar() {
     const location = useLocation();
     const { user, logout } = useAuth();
-    const navLinks = user?.admin ? [...baseNavLinks, adminNavLink] : baseNavLinks;
+    const navLinks = user?.admin ? [...baseNavLinks, ...adminNavLinks] : baseNavLinks;
     const [anchorEl, setAnchorEl] = useState(null);
     const [mobileMenuAnchor, setMobileMenuAnchor] = useState(null);
     const theme = useTheme();

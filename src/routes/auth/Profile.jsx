@@ -22,13 +22,17 @@ export default function Profile() {
     const navigate = useNavigate();
 
     // Navigation/quick actions
-    const quickActions = [
-        { label: "Admin Panel", icon: <Shield />, description: "Manage tournaments and users", to: "/admin/feedback" },
+    const userQuickActions = [
         { label: "Browse Tournaments", icon: <SportsEsports />, description: "Find and join tournaments", to: "/tournaments" },
+        { label: "Browse Teams", icon: <SportsEsports />, description: "Find and join teams", to: "/teams" },
         { label: "Chat", icon: <Forum />, description: "Connect with other players", to: "/chats" },
         { label: "Feedback", icon: <Star />, description: "Rate and review matches", to: "/feedback" },
-        { label: "Statistics", icon: <BarChart />, description: "View your performance", to: "/statistics" },
-    ];
+    ]
+    const adminQuickActions = [
+        { label: "Admin Panel", icon: <Shield />, description: "Manage tournaments", to: "/admin" },
+    ]
+
+    const quickActions = [...userQuickActions, ...(user?.admin ? adminQuickActions : [])];
 
     return (
         <Box sx={{ minHeight: "100vh", bgcolor: "background.default", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "flex-start", py: { xs: 2, md: 6 }, px: 2 }}>
@@ -97,7 +101,7 @@ export default function Profile() {
                 {/* Quick Actions */}
                 <Grid container spacing={3} justifyContent="center">
                     {quickActions.map((action) => (
-                        <Grid item xs={12} sm={6} key={action.label} sx={{ display: "flex", justifyContent: "center" }}>
+                        <Grid item xs={12} sm={6} key={action.label} sx={{ display: "flex", justifyContent: "center", width: "100%", maxWidth: 220 }}>
                             <Card
                                 sx={{
                                     p: 3,

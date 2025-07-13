@@ -9,12 +9,19 @@ import {
   CardContent,
   CircularProgress,
   Container,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
   Divider,
+  FormControl,
   Grid,
+  InputLabel,
   List,
   ListItem,
   ListItemAvatar,
   ListItemText,
+  Select,
   Tab,
   Table,
   TableBody,
@@ -23,11 +30,15 @@ import {
   TableRow,
   Tabs,
   Typography,
+  MenuItem,
 } from "@mui/material";
 import SportsSoccerIcon from "@mui/icons-material/SportsSoccer";
 import PeopleIcon from "@mui/icons-material/People";
 import FormatListNumberedIcon from "@mui/icons-material/FormatListNumbered";
 import TableChartIcon from "@mui/icons-material/TableChart";
+import PersonAddIcon from "@mui/icons-material/PersonAdd";
+import PersonRemoveIcon from "@mui/icons-material/PersonRemove";
+import AdminPanelSettingsIcon from "@mui/icons-material/AdminPanelSettings";
 import { useAuth } from "../../contexts/auth/AuthContext.js";
 import {
   formatTimestamp,
@@ -36,8 +47,15 @@ import {
   getTournament,
   getTournamentParticipants,
   getUserById,
+  registerParticipant,
+  unregisterParticipant,
+  getTeams,
+  getTeamParticipants,
 } from "../../constants.js";
 import { useCustomNavigate } from "../../contexts/navigation/useCustomNavigate.js";
+
+const CARD_HEIGHT = 150;
+const CARD_GAP = 32;
 
 function TabPanel({ children, value, index }) {
   return (
@@ -53,7 +71,7 @@ function TabPanel({ children, value, index }) {
 
 export default function TournamentDetails() {
   const { id } = useParams();
-  const { accessToken } = useAuth();
+  const { accessToken, user } = useAuth();
   const navigate = useCustomNavigate();
 
   const [loading, setLoading] = useState(true);
@@ -65,6 +83,25 @@ export default function TournamentDetails() {
   const [bracket, setBracket] = useState(null);
   const [bracketEl, setBracketEl] = useState(null);
   const [tab, setTab] = useState(0);
+  const [isRegistered, setIsRegistered] = useState(false);
+  const [registrationLoading, setRegistrationLoading] = useState(false);
+  const [userTeams, setUserTeams] = useState([]); // Teams where user is a member
+  const [selectedTeam, setSelectedTeam] = useState("");
+  const [showTeamSelection, setShowTeamSelection] = useState(false);
+
+  // Check if current user is registered
+  const checkRegistrationStatus = () => {
+    if (!user?.id || !participants.length) return;
+    const userIsRegistered = participants.some((p) => {
+      const participantId = typeof p === "string" ? p : p.id;
+      return participantId === user.id;
+    });
+    setIsRegistered(userIsRegistered);
+  };
+
+  useEffect(() => {
+    checkRegistrationStatus();
+  }, [participants, user?.id]);
 
   useEffect(() => {
     let cancelled = false;
@@ -73,17 +110,51 @@ export default function TournamentDetails() {
       setLoading(true);
       setError(null);
       try {
-        const [tourRes, partRes, matchRes, bracketRes] = await Promise.all([
+        // Only fetch teams if tournament type is team
+        const promises = [
           getTournament(id, accessToken).catch(() => null),
           getTournamentParticipants(id, accessToken).catch(() => null),
           getTourMatches(id, accessToken).catch(() => null),
           getBracket(id, accessToken).catch(() => null),
-        ]);
+        ];
+
+        const [tourRes, partRes, matchRes, bracketRes] = await Promise.all(promises);
 
         if (cancelled) return;
         if (!tourRes) throw new Error("tournament");
 
-        setTournament(tourRes.data);
+        const tournamentData = tourRes.data;
+        setTournament(tournamentData);
+
+        // Only fetch teams if tournament type is team
+        if (tournamentData?.typeTournament === "team") {
+          try {
+            const teamsRes = await getTeams(accessToken);
+            const teamsData = Array.isArray(teamsRes?.data) ? teamsRes.data : [];
+
+            // Get user's teams (where user is a member)
+            const userTeamsData = [];
+            for (const team of teamsData) {
+              try {
+                const teamParticipantsRes = await getTeamParticipants(team.id, accessToken);
+                const teamParticipants = Array.isArray(teamParticipantsRes?.data) ? teamParticipantsRes.data : [];
+                const isUserMember = teamParticipants.some(p => {
+                  const participantId = typeof p === "string" ? p : p.id;
+                  return participantId === user?.id;
+                });
+                if (isUserMember) {
+                  userTeamsData.push(team);
+                }
+              } catch {
+                // Skip teams where we can't fetch participants
+              }
+            }
+            setUserTeams(userTeamsData);
+          } catch {
+            // Handle teams fetch error
+          }
+        }
+
         const partArray = Array.isArray(partRes?.data) ? partRes.data : [];
         setParticipants(partArray);
         // fetch participant infos if array contains id strings
@@ -107,81 +178,173 @@ export default function TournamentDetails() {
       } catch {
         if (!cancelled) {
           setError("Ошибка загрузки данных, показываю демо");
-          setTournament({
-            title: "Demo Tournament",
-            sport: "FOOTBALL",
-            description: "Тестовый турнир",
-            startTime: new Date().toISOString(),
-            entryCost: 0,
+
+          // Check if this is a team tournament demo
+          if (id === "team-tournament-demo") {
+            setTournament({
+              title: "Team Football Championship",
+              sport: "FOOTBALL",
+              description: "Командный турнир по футболу",
+              startTime: new Date().toISOString(),
+              entryCost: 500,
+              typeTournament: "team",
+              maxParticipants: 16,
+            });
+          } else {
+            setTournament({
+              title: "Demo Tournament",
+              sport: "FOOTBALL",
+              description: "Тестовый турнир",
+              startTime: new Date().toISOString(),
+              entryCost: 0,
+              typeTournament: "solo",
+            });
+          }
+
+          // 32 участника — 5 раундов (16-8-4-2-1)
+          const ids = Array.from(
+            { length: 32 },
+            (_, i) =>
+              `00000000-0000-0000-0000-${(i + 1).toString().padStart(12, "0")}`
+          );
+
+          setParticipants(ids);
+
+          setParticipantInfos(
+            Object.fromEntries(
+              ids.map((id, i) => [id, { name: `Player ${i + 1}` }])
+            )
+          );
+
+          // Add demo teams for team tournaments
+          if (id === "team-tournament-demo") {
+            const demoTeams = [
+              {
+                id: "team-1",
+                name: "Alpha Team",
+                description: "Профессиональная команда по футболу",
+                sport: "FOOTBALL",
+                maxParticipants: 11,
+                currentParticipants: 8,
+              },
+              {
+                id: "team-2",
+                name: "Beta Squad",
+                description: "Команда по футболу",
+                sport: "FOOTBALL",
+                maxParticipants: 11,
+                currentParticipants: 10,
+              },
+              {
+                id: "team-3",
+                name: "Gamma Force",
+                description: "Футбольная команда",
+                sport: "FOOTBALL",
+                maxParticipants: 11,
+                currentParticipants: 6,
+              },
+            ];
+            // Assume user is member of first two teams for demo
+            setUserTeams(demoTeams.slice(0, 2));
+          }
+
+          // ---------- матчи ----------
+          const makeId = (n) =>
+            `aaaaaaaa-aaaa-aaaa-aaaa-${n.toString().padStart(12, "0")}`;
+
+          // раунд-1 (16 матчей)
+          const r1 = ids.reduce((acc, pid, idx) => {
+            if (idx % 2) {
+              const a = ids[idx - 1];
+              const b = pid;
+              acc.push({
+                id: makeId(acc.length + 1),
+                plannedStartTime: new Date().toISOString(),
+                participants: [
+                  { id: a, score: 2 },
+                  { id: b, score: 1 },
+                ],
+                winner: a,
+                status: "finished",
+                parentMatches: [],
+              });
+            }
+            return acc;
+          }, []);
+
+          // раунд-2 (8 матчей)
+          const r2 = Array.from({ length: 8 }, (_, i) => {
+            const pA = r1[i * 2];
+            const pB = r1[i * 2 + 1];
+            const winner = pA.winner;
+            return {
+              id: makeId(16 + i + 1),
+              plannedStartTime: new Date().toISOString(),
+              participants: [
+                { id: pA.winner, score: 2 },
+                { id: pB.winner, score: 0 },
+              ],
+              winner,
+              status: "finished",
+              parentMatches: [pA.id, pB.id],
+            };
           });
 
-          // Mock participants (ids only per schema)
-          setParticipants([
-            "11111111-1111-1111-1111-111111111111",
-            "22222222-2222-2222-2222-222222222222",
-            "33333333-3333-3333-3333-333333333333",
-            "44444444-4444-4444-4444-444444444444",
-          ]);
-
-          setParticipantInfos({
-            "11111111-1111-1111-1111-111111111111": { name: "Player One" },
-            "22222222-2222-2222-2222-222222222222": { name: "Player Two" },
-            "33333333-3333-3333-3333-333333333333": { name: "Player Three" },
-            "44444444-4444-4444-4444-444444444444": { name: "Player Four" },
+          // раунд-3 (4 матча)
+          const r3 = Array.from({ length: 4 }, (_, i) => {
+            const pA = r2[i * 2];
+            const pB = r2[i * 2 + 1];
+            const winner = pA.winner;
+            return {
+              id: makeId(24 + i + 1),
+              plannedStartTime: new Date().toISOString(),
+              participants: [
+                { id: pA.winner, score: 2 },
+                { id: pB.winner, score: 1 },
+              ],
+              winner,
+              status: "finished",
+              parentMatches: [pA.id, pB.id],
+            };
           });
 
-          // Mock matches in new schema
-          setMatches([
-            {
-              id: "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
+          // раунд-4 (2 матча)
+          const r4 = Array.from({ length: 2 }, (_, i) => {
+            const pA = r3[i * 2];
+            const pB = r3[i * 2 + 1];
+            const winner = pA.winner;
+            return {
+              id: makeId(28 + i + 1),
               plannedStartTime: new Date().toISOString(),
-              plannedEndTime: new Date(Date.now() + 3600000).toISOString(),
               participants: [
-                { id: "11111111-1111-1111-1111-111111111111", score: 2 },
-                { id: "22222222-2222-2222-2222-222222222222", score: 1 },
+                { id: pA.winner, score: 2 },
+                { id: pB.winner, score: 0 },
               ],
-              winner: "11111111-1111-1111-1111-111111111111",
+              winner,
               status: "finished",
-              parentMatches: [],
-            },
-            {
-              id: "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb",
-              plannedStartTime: new Date().toISOString(),
-              plannedEndTime: new Date(Date.now() + 3600000).toISOString(),
-              participants: [
-                { id: "33333333-3333-3333-3333-333333333333", score: 0 },
-                { id: "44444444-4444-4444-4444-444444444444", score: 2 },
-              ],
-              winner: "44444444-4444-4444-4444-444444444444",
-              status: "finished",
-              parentMatches: [],
-            },
-            {
-              id: "cccccccc-cccc-cccc-cccc-cccccccccccc",
-              plannedStartTime: new Date().toISOString(),
-              plannedEndTime: new Date(Date.now() + 3600000).toISOString(),
-              participants: [
-                { id: "11111111-1111-1111-1111-111111111111", score: null },
-                { id: "44444444-4444-4444-4444-444444444444", score: null },
-              ],
-              winner: null,
-              status: "prepared",
-              parentMatches: [
-                "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
-                "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb",
-              ],
-            },
-          ]);
+              parentMatches: [pA.id, pB.id],
+            };
+          });
 
-          // Mock bracket
+          // финал (1 матч)
+          const final = {
+            id: makeId(31),
+            plannedStartTime: new Date().toISOString(),
+            participants: [
+              { id: r4[0].winner, score: null },
+              { id: r4[1].winner, score: null },
+            ],
+            winner: null,
+            status: "prepared",
+            parentMatches: [r4[0].id, r4[1].id],
+          };
+
+          setMatches([...r1, ...r2, ...r3, ...r4, final]);
+
           setBracket({
             typeTournament: "solo",
             typeGroup: "OLYMPIC",
-            matches: [
-              "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
-              "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb",
-              "cccccccc-cccc-cccc-cccc-cccccccccccc",
-            ],
+            matches: [...r1, ...r2, ...r3, ...r4, final].map((m) => m.id),
           });
         }
       } finally {
@@ -193,165 +356,268 @@ export default function TournamentDetails() {
     return () => {
       cancelled = true;
     };
-  }, [id, accessToken]);
+  }, [id, accessToken, user?.id]);
+
+  // Handle registration
+  const handleRegister = async () => {
+    if (!user?.id) {
+      setError("Необходимо войти в систему для регистрации");
+      return;
+    }
+
+    // For team tournaments, check if user has teams
+    if (tournament?.typeTournament === "team") {
+      if (userTeams.length === 0) {
+        setError("Вы не являетесь участником ни одной команды. Присоединитесь к команде для регистрации на командный турнир.");
+        return;
+      }
+      setShowTeamSelection(true);
+      return;
+    }
+
+    setRegistrationLoading(true);
+    setError(null);
+
+    try {
+      await registerParticipant(
+        id,
+        user.id,
+        tournament?.typeTournament || "solo",
+        accessToken
+      );
+      setIsRegistered(true);
+      // Refresh participants list
+      const partRes = await getTournamentParticipants(id, accessToken);
+      const partArray = Array.isArray(partRes?.data) ? partRes.data : [];
+      setParticipants(partArray);
+    } catch (err) {
+      setError(err.response?.data?.message || "Ошибка регистрации на турнир");
+    } finally {
+      setRegistrationLoading(false);
+    }
+  };
+
+  // Handle team registration
+  const handleTeamRegister = async () => {
+    if (!selectedTeam) {
+      setError("Выберите команду для регистрации");
+      return;
+    }
+
+    setRegistrationLoading(true);
+    setError(null);
+
+    try {
+      await registerParticipant(id, selectedTeam, "team", accessToken);
+      setIsRegistered(true);
+      setShowTeamSelection(false);
+      // Refresh participants list
+      const partRes = await getTournamentParticipants(id, accessToken);
+      const partArray = Array.isArray(partRes?.data) ? partRes.data : [];
+      setParticipants(partArray);
+    } catch (err) {
+      setError(
+        err.response?.data?.message || "Ошибка регистрации команды на турнир"
+      );
+    } finally {
+      setRegistrationLoading(false);
+    }
+  };
+
+  // Handle unregistration
+  const handleUnregister = async () => {
+    if (!user?.id) {
+      setError("Необходимо войти в систему");
+      return;
+    }
+
+    setRegistrationLoading(true);
+    setError(null);
+
+    try {
+      await unregisterParticipant(
+        id,
+        user.id,
+        tournament?.typeTournament || "solo",
+        accessToken
+      );
+      setIsRegistered(false);
+      // Refresh participants list
+      const partRes = await getTournamentParticipants(id, accessToken);
+      const partArray = Array.isArray(partRes?.data) ? partRes.data : [];
+      setParticipants(partArray);
+    } catch (err) {
+      setError(err.response?.data?.message || "Ошибка отмены регистрации");
+    } finally {
+      setRegistrationLoading(false);
+    }
+  };
 
   useEffect(() => {
     const prepareBracket = () => {
-      if (!bracket) return null;
-      if (bracket.typeGroup !== "OLYMPIC") return null;
+      if (!bracket || bracket.typeGroup !== "OLYMPIC") return null;
 
-      // Helper to keep matches in a stable, chronological order (fallback to id)
-      const sortMatches = (a, b) => {
-        const timeA = new Date(a.plannedStartTime || 0).getTime();
-        const timeB = new Date(b.plannedStartTime || 0).getTime();
-        if (timeA === timeB) return a.id.localeCompare(b.id);
-        return timeA - timeB;
-      };
+      const rounds = [];
+      let prev = matches.filter((m) => m.parentMatches.length === 0);
+      let next = matches.filter((m) => m.parentMatches.length > 0);
+      rounds.push(prev);
 
-      // Build rounds list: round[0] – matches without parents, next rounds recursively
-      let previousMatches = matches
-        .filter((m) => m.parentMatches.length === 0)
-        .sort(sortMatches);
-      let currentMatches = matches
-        .filter((m) => m.parentMatches.length !== 0)
-        .sort(sortMatches);
-
-      const rounds = [previousMatches];
       let depth = 0;
-
-      while (currentMatches.length > 0 && depth++ < 10) {
-        const round = currentMatches
-          .filter((m) => previousMatches.some((pm) => m.parentMatches.includes(pm.id)))
-          .sort(sortMatches);
-        if (round.length === 0) break;
-        rounds.push(round);
-
-        const prev = previousMatches;
-        previousMatches = currentMatches;
-        currentMatches = currentMatches.filter(
-          (m) => !prev.some((pm) => m.parentMatches.includes(pm.id))
+      while (next.length && depth < 10) {
+        depth++;
+        const curr = next.filter((m) =>
+          rounds[rounds.length - 1].some((pm) =>
+            m.parentMatches.includes(pm.id)
+          )
         );
+        rounds.push(curr);
+        next = next.filter((m) => !curr.includes(m));
       }
-
       return rounds;
     };
 
     const rounds = prepareBracket();
     if (!rounds) return;
 
-    const baseGap = 32; // vertical gap between neighbouring matches in the same round
-    const CARD_HEIGHT = 96; // approximate rendered card height, tweak if needed
+    const generateArrows = (index) => {
+      let nextRound = rounds[index + 1];
+      if (!nextRound) return [];
 
-    setBracketEl(
+      let currentLenght = rounds[index].length;
+
+      let list = [];
+      for (let i = 0; i < nextRound.length; i++) {
+        list.push(
+          <Box
+            key={i * 2}
+            sx={{
+              display: "flex",
+              flexDirection: "row",
+              alignItems: "center",
+              bgcolor: "transparent",
+            }}
+          >
+            <Box
+              sx={{
+                width: `${CARD_GAP / 2}px`,
+                height: `${(CARD_HEIGHT * rounds[0].length) / currentLenght}px`,
+                borderColor: "textColor.primary",
+                borderStyle: "solid",
+                borderWidth: "1px",
+                borderLeftWidth: "0px",
+              }}
+            ></Box>
+            <Box
+              sx={{
+                width: `${CARD_GAP / 2}px`,
+                height: `0px`,
+                borderColor: "textColor.primary",
+                borderStyle: "solid",
+                borderWidth: "1px",
+                borderLeftWidth: "0px",
+                borderTopWidth: 0,
+              }}
+            ></Box>
+          </Box>
+        );
+      }
+
+      return list;
+    };
+
+    const elm = (
       <Box
         sx={{
+          width: "fit-content",
           display: "flex",
-          alignItems: "flex-start",
-          gap: 6,
-          overflowX: "auto",
-          overflowY: "visible",
+          alignItems: "center",
+          justifyContent: "center",
           py: 2,
         }}
       >
-        {rounds.map((round, roundIdx) => (
-          <Box
-            key={roundIdx}
-            sx={{
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-              position: "relative",
-              height: "100%",
-            }}
-          >
-            <Typography variant="subtitle2" sx={{ mb: 2, fontWeight: 700 }}>
-              Раунд {roundIdx + 1}
-            </Typography>
+        {rounds.map((round, ri) => (
+          <>
             <Box
               sx={{
                 display: "flex",
+                height: `${CARD_HEIGHT * rounds[0].length}px`,
                 flexDirection: "column",
-                justifyContent: "space-evenly",
+                justifyContent: "space-around",
+                mr: "8px",
               }}
             >
-              {round.map((m, matchIdx) => (
-                <Box
+              {round.map((m) => (
+                <Card
                   key={m.id}
+                  variant="outlined"
                   sx={{
-                    position: "relative",
                     display: "flex",
                     flexDirection: "column",
-                    alignItems: "flex-start",
-                    minWidth: 220,
-                    bgcolor: "background.paper",
-                    border: "1px solid",
-                    borderColor: "divider",
-                    borderRadius: 2,
-                    boxShadow: 3,
-                    p: 1.5,
-                    mb:
-                      matchIdx !== round.length - 1
-                        ? baseGap * Math.pow(2, roundIdx)
-                        : 0,
+                    justifyContent: "space-around",
+                    width: 160,
+                    height: CARD_HEIGHT,
+                    p: 1,
+                    boxShadow: 1,
+                    borderRadius: 1,
                   }}
                 >
-                  <Typography variant="body2" sx={{ fontWeight: 600 }}>
-                    {getParticipantLabel(m.participants?.[0]?.id || "—")}{" "}
-                    {m.participants?.[0]?.score != null
-                      ? `(${m.participants[0].score})`
-                      : ""}
-                  </Typography>
-                  <Typography variant="body2" sx={{ fontWeight: 600 }}>
-                    {getParticipantLabel(m.participants?.[1]?.id || "—")}{" "}
-                    {m.participants?.[1]?.score != null
-                      ? `(${m.participants[1].score})`
-                      : ""}
-                  </Typography>
-                  {m.status && (
-                    <Typography
-                      variant="caption"
-                      color="text.secondary"
-                      sx={{ mt: 0.5 }}
-                    >
-                      {m.status}
+                  <Box>
+                    <Typography variant="caption" sx={{ fontWeight: 600 }}>
+                      {formatTimestamp(m.plannedStartTime, "HH:mm")}
                     </Typography>
-                  )}
-
-                  {/* Horizontal connector to next round */}
-                  {roundIdx < rounds.length - 1 && (
-                    <Box
-                      sx={{
-                        position: "absolute",
-                        top: "50%",
-                        right: -28,
-                        width: 28,
-                        height: 2,
-                        bgcolor: "divider",
-                      }}
-                    />
-                  )}
-
-                  {/* Vertical connector grouping two child matches */}
-                  {roundIdx < rounds.length - 1 && matchIdx % 2 === 0 && (
-                    <Box
-                      sx={{
-                        position: "absolute",
-                        top: "50%",
-                        right: -28,
-                        width: 2,
-                        height: baseGap * Math.pow(2, roundIdx) + CARD_HEIGHT, // dynamic connector height
-                        bgcolor: "divider",
-                      }}
-                    />
-                  )}
-                </Box>
+                    <Divider sx={{ my: 0.5 }} />
+                    <Typography variant="body2" noWrap>
+                      {participantInfos[m.participants[0].id]?.name ||
+                        m.participants[0].id}
+                    </Typography>
+                    <Typography variant="body2" noWrap>
+                      {participantInfos[m.participants[1].id]?.name ||
+                        m.participants[1].id}
+                    </Typography>
+                  </Box>
+                  <Box>
+                    <Typography
+                      variant="subtitle2"
+                      sx={{ mt: 0.5, textAlign: "center" }}
+                    >
+                      {m.participants[0].score ?? "-"} :{" "}
+                      {m.participants[1].score ?? "-"}
+                    </Typography>
+                    {m.status === "finished" && (
+                      <Typography
+                        variant="caption"
+                        sx={{
+                          textAlign: "center",
+                          display: "block",
+                          mt: 0.5,
+                          color: "success.main",
+                        }}
+                      >
+                        Winner: {participantInfos[m.winner]?.name || m.winner}
+                      </Typography>
+                    )}
+                  </Box>
+                </Card>
               ))}
             </Box>
-          </Box>
+            <Box
+              key={ri}
+              sx={{
+                display: "flex",
+                height: `${CARD_HEIGHT * rounds[0].length}px`,
+                flexDirection: "column",
+                justifyContent: "space-around",
+                mr: "8px",
+              }}
+            >
+              {generateArrows(ri)}
+            </Box>
+          </>
         ))}
       </Box>
     );
-  }, [id, accessToken, bracket, matches]);
+    setBracketEl(elm);
+  }, [bracket, matches, participantInfos]);
 
   if (loading) {
     return (
@@ -394,9 +660,33 @@ export default function TournamentDetails() {
         Назад
       </Button>
 
-      <Typography variant="h3" gutterBottom sx={{ fontWeight: 700 }}>
-        {tournament.title}
-      </Typography>
+      <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 2 }}>
+        <Typography variant="h3" sx={{ fontWeight: 700 }}>
+          {tournament.title}
+        </Typography>
+        {user?.admin && (
+          <Box sx={{ display: "flex", gap: 2 }}>
+            <Button
+              variant="outlined"
+              startIcon={<AdminPanelSettingsIcon />}
+              onClick={() => navigate(`/admin/tournaments`)}
+              sx={{ fontWeight: 600 }}
+              color="secondary"
+            >
+              Управление турниром
+            </Button>
+            <Button
+              variant="outlined"
+              startIcon={<AdminPanelSettingsIcon />}
+              onClick={() => navigate(`/admin/matches?tournamentId=${id}`)}
+              sx={{ fontWeight: 600 }}
+              color="primary"
+            >
+              Управление матчами
+            </Button>
+          </Box>
+        )}
+      </Box>
       {error && (
         <Alert severity="error" sx={{ mb: 3 }}>
           {error}
@@ -438,6 +728,52 @@ export default function TournamentDetails() {
               </Grid>
             ))}
           </Grid>
+          <Box sx={{ mt: 2, display: "flex", alignItems: "center", gap: 2 }}>
+            {user?.id ? (
+              <>
+                {isRegistered ? (
+                  <Button
+                    variant="outlined"
+                    color="error"
+                    startIcon={<PersonRemoveIcon />}
+                    onClick={handleUnregister}
+                    disabled={registrationLoading}
+                    sx={{ fontWeight: 600 }}
+                  >
+                    {registrationLoading ? "Отмена..." : "Отменить регистрацию"}
+                  </Button>
+                ) : (
+                  <Button
+                    variant="contained"
+                    color="success"
+                    startIcon={<PersonAddIcon />}
+                    onClick={handleRegister}
+                    disabled={registrationLoading}
+                    sx={{ fontWeight: 600 }}
+                  >
+                    {registrationLoading
+                      ? "Регистрация..."
+                      : tournament?.typeTournament === "team"
+                      ? "Зарегистрировать команду"
+                      : "Зарегистрироваться"}
+                  </Button>
+                )}
+                {isRegistered && (
+                  <Typography
+                    variant="body2"
+                    color="success.main"
+                    sx={{ fontWeight: 600 }}
+                  >
+                    ✓ Вы зарегистрированы
+                  </Typography>
+                )}
+              </>
+            ) : (
+              <Typography variant="body2" color="text.secondary">
+                Войдите в систему для регистрации на турнир
+              </Typography>
+            )}
+          </Box>
         </CardContent>
       </Card>
 
@@ -509,10 +845,14 @@ export default function TournamentDetails() {
                       </TableCell>
                       <TableCell align="center">{renderScore(m)}</TableCell>
                       <TableCell align="center">
-                        {m.plannedStartTime ? formatTimestamp(m.plannedStartTime) : "—"}
+                        {m.plannedStartTime
+                          ? formatTimestamp(m.plannedStartTime)
+                          : "—"}
                       </TableCell>
                       <TableCell align="center">
-                        {m.plannedEndTime ? formatTimestamp(m.plannedEndTime) : "—"}
+                        {m.plannedEndTime
+                          ? formatTimestamp(m.plannedEndTime)
+                          : "—"}
                       </TableCell>
                       <TableCell align="center">{m.status}</TableCell>
                     </TableRow>
@@ -524,23 +864,74 @@ export default function TournamentDetails() {
         </TabPanel>
 
         <TabPanel value={tab} index={2}>
-          {bracket ? (
-            <Box
-              sx={{
-                display: "flex",
-                justifyContent: "space-evenly",
-                width: "100%",
-                height: "100%",
+          <Box
+            sx={{
+              overflowX: "auto",
+              px: 1,
+              /* webkit */
+              "&::-webkit-scrollbar": { height: 8 },
+              "&::-webkit-scrollbar-thumb": {
+                bgcolor: "primary.main",
+                borderRadius: 4,
+              },
+              "&::-webkit-scrollbar-track": {
                 bgcolor: "background.default",
-              }}
-            >
-              {bracketEl}
-            </Box>
-          ) : (
-            <Typography color="text.secondary">Сетка недоступна</Typography>
-          )}
+              },
+              /* firefox */
+              scrollbarWidth: "thin",
+              scrollbarColor: "primary.main transparent",
+            }}
+          >
+            {bracket ? (
+              bracketEl
+            ) : (
+              <Typography color="text.secondary">Сетка недоступна</Typography>
+            )}
+          </Box>
         </TabPanel>
       </Card>
+
+      {/* Team Selection Dialog */}
+      <Dialog
+        open={showTeamSelection}
+        onClose={() => setShowTeamSelection(false)}
+        maxWidth="sm"
+        fullWidth
+      >
+        <DialogTitle>Выберите команду для регистрации</DialogTitle>
+        <DialogContent>
+          <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+            Выберите команду, участником которой вы являетесь:
+          </Typography>
+          <FormControl fullWidth sx={{ mt: 2 }}>
+            <InputLabel>Команда</InputLabel>
+            <Select
+              value={selectedTeam}
+              onChange={(e) => setSelectedTeam(e.target.value)}
+              label="Команда"
+            >
+              {userTeams.map((team) => (
+                <MenuItem key={team.id} value={team.id}>
+                  {team.name} ({team.currentParticipants}/{team.maxParticipants}{" "}
+                  участников)
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setShowTeamSelection(false)}>Отмена</Button>
+          <Button
+            onClick={handleTeamRegister}
+            variant="contained"
+            disabled={!selectedTeam || registrationLoading}
+          >
+            {registrationLoading
+              ? "Регистрация..."
+              : "Зарегистрировать команду"}
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Container>
   );
 }

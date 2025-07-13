@@ -18,15 +18,17 @@ import {
 import SportsSoccerIcon from '@mui/icons-material/SportsSoccer';
 import SportsTennisIcon from '@mui/icons-material/SportsTennis';
 import SportsBasketballIcon from '@mui/icons-material/SportsBasketball';
+import SportsEsportsIcon from '@mui/icons-material/SportsEsports';
 import EventIcon from '@mui/icons-material/Event';
 import PeopleIcon from '@mui/icons-material/People';
+import GroupIcon from '@mui/icons-material/Group';
 import AttachMoneyIcon from '@mui/icons-material/AttachMoney';
 import CalendarTodayIcon from '@mui/icons-material/CalendarToday';
+import AddIcon from "@mui/icons-material/Add";
 import { useAuth } from "../../contexts/auth/AuthContext.js";
 import { getTournaments } from "../../constants.js";
 import { useCustomNavigate } from "../../contexts/navigation/useCustomNavigate.js";
 import { formatTimestamp } from "../../constants.js";
-import AddIcon from "@mui/icons-material/Add";
 
 const sportIcons = {
     FOOTBALL: <SportsSoccerIcon />,
@@ -64,6 +66,18 @@ export default function Tournaments() {
                         maxParticipants: 32,
                     },
                     {
+                        id: "team-tournament-demo",
+                        title: "Team Football Championship",
+                        description: "Командный турнир по футболу",
+                        sport: "FOOTBALL",
+                        typeTournament: "team",
+                        typeGroup: "olympic",
+                        matchesNumber: 8,
+                        startTime: "2024-06-15T10:00:00Z",
+                        entryCost: 500.0,
+                        maxParticipants: 16,
+                    },
+                    {
                         id: "123e4567-e89b-12d3-a456-426614174003",
                         title: "Tennis Masters Cup",
                         description: "Престижный одиночный теннисный турнир",
@@ -82,6 +96,11 @@ export default function Tournaments() {
         }
         if (accessToken) fetchData();
     }, [accessToken]);
+
+    // Handle card click (navigate to tournament details)
+    const handleCardClick = (tournamentId) => {
+        navigate(`/tournaments/${tournamentId}`);
+    };
 
     return (
         <Box sx={{ height: "100%", bgcolor: "background.default", p: { xs: 2, md: 4 } }}>
@@ -119,7 +138,7 @@ export default function Tournaments() {
                         tournaments.map((tour) => (
                             <Grid item key={tour.id} xs={12} sm={6} md={4} lg={3}>
                                 <Card sx={{ height: '100%', boxShadow: 4, borderRadius: 2 }}>
-                                    <CardActionArea onClick={() => navigate(`/tournaments/${tour.id}`)}>
+                                    <CardActionArea onClick={() => handleCardClick(tour.id)}>
                                         <CardHeader
                                             avatar={
                                                 <Avatar sx={{ bgcolor: 'primary.main' }}>
@@ -143,7 +162,19 @@ export default function Tournaments() {
                                                     label={tour.entryCost != null ? `${tour.entryCost}₽` : 'Бесплатно'}
                                                     size="small"
                                                 />
+                                                {tour.typeTournament === "team" && (
+                                                    <Chip 
+                                                        icon={<GroupIcon />} 
+                                                        label="Командный" 
+                                                        size="small" 
+                                                        color="primary"
+                                                    />
+                                                )}
                                             </Stack>
+                                            
+                                            <Typography variant="body2" color="text.secondary" sx={{ mt: 2, textAlign: "center" }}>
+                                                Нажмите для просмотра деталей
+                                            </Typography>
                                         </CardContent>
                                     </CardActionArea>
                                 </Card>
