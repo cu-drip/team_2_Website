@@ -9,6 +9,22 @@ export function withInlineParam(path, search) {
     return path;
 }
 
+export function formatTimestamp(timestamp) {
+    if (!timestamp) return "";
+    try {
+        const date = new Date(timestamp);
+        return date.toLocaleString({
+            year: "numeric",
+            month: "2-digit",
+            day: "2-digit",
+            hour: "2-digit",
+            minute: "2-digit",
+        });
+    } catch {
+        return timestamp;
+    }
+}
+
 export const BACKEND_URL = `http://51.250.38.151:8066`;
 
 // Auth API endpoints
@@ -161,18 +177,286 @@ export function getWebSocketUrl(chatId, token) {
     return `${WEBSOCKET_URL}/${chatId}?token=${token}`;
 }
 
-export const formatTimestamp = (timestamp) => {
-    if (!timestamp) return "";
-    try {
-        const date = new Date(timestamp);
-        return date.toLocaleString({
-            year: "numeric",
-            month: "2-digit",
-            day: "2-digit",
-            hour: "2-digit",
-            minute: "2-digit",
-        });
-    } catch {
-        return timestamp;
-    }
+// Competition Service API endpoints
+export const TOURNAMENT_API = {
+    TOURNAMENTS: "/api/v1/tournaments",
+    TOURNAMENT: (tournamentId) => `/api/v1/tournaments/${tournamentId}`,
+    TOURNAMENT_PARTICIPANTS: (tournamentId) => `/api/v1/tournaments/${tournamentId}/participants`,
+    TOURNAMENT_PARTICIPANT: (tournamentId, participantId) => `/api/v1/tournaments/${tournamentId}/participants/${participantId}`,
+    TOURNAMENT_NOTIFY: (tournamentId) => `/api/v1/tournaments/${tournamentId}/notify`,
+    USER_TOURNAMENTS: (userId) => `/api/v1/tournaments/users/${userId}`,
+    USER_TOURNAMENTS_DETAILS: (userId) => `/api/v1/tournaments/users/${userId}/details`,
+    USER_ONGOING_TOURNAMENTS: (userId) => `/api/v1/tournaments/users/${userId}/ongoing`,
+    USER_OPEN_REGISTRATION: (userId) => `/api/v1/tournaments/users/${userId}/open-registration`,
+    USER_ENDED_TOURNAMENTS: (userId) => `/api/v1/tournaments/users/${userId}/ended`,
 };
+
+// Tournament management functions
+export function getTournaments(token) {
+    return axios.get(`${BACKEND_URL}${TOURNAMENT_API.TOURNAMENTS}`, {
+        headers: { Authorization: `Bearer ${token}` },
+    });
+}
+
+export function createTournament(data, token) {
+    return axios.post(`${BACKEND_URL}${TOURNAMENT_API.TOURNAMENTS}`, data, {
+        headers: { Authorization: `Bearer ${token}` },
+    });
+}
+
+export function getTournament(tournamentId, token) {
+    return axios.get(`${BACKEND_URL}${TOURNAMENT_API.TOURNAMENT(tournamentId)}`, {
+        headers: { Authorization: `Bearer ${token}` },
+    });
+}
+
+export function updateTournament(tournamentId, data, token) {
+    return axios.put(`${BACKEND_URL}${TOURNAMENT_API.TOURNAMENT(tournamentId)}`, data, {
+        headers: { Authorization: `Bearer ${token}` },
+    });
+}
+
+export function patchTournament(tournamentId, data, token) {
+    return axios.patch(`${BACKEND_URL}${TOURNAMENT_API.TOURNAMENT(tournamentId)}`, data, {
+        headers: { Authorization: `Bearer ${token}` },
+    });
+}
+
+export function deleteTournament(tournamentId, token) {
+    return axios.delete(`${BACKEND_URL}${TOURNAMENT_API.TOURNAMENT(tournamentId)}`, {
+        headers: { Authorization: `Bearer ${token}` },
+    });
+}
+
+export function getTournamentParticipants(tournamentId, token) {
+    return axios.get(`${BACKEND_URL}${TOURNAMENT_API.TOURNAMENT_PARTICIPANTS(tournamentId)}`, {
+        headers: { Authorization: `Bearer ${token}` },
+    });
+}
+
+export function registerParticipant(tournamentId, participantId, participantType, token) {
+    return axios.post(
+        `${BACKEND_URL}${TOURNAMENT_API.TOURNAMENT_PARTICIPANT(tournamentId, participantId)}`,
+        {},
+        {
+            params: { participantType },
+            headers: { Authorization: `Bearer ${token}` },
+        }
+    );
+}
+
+export function unregisterParticipant(tournamentId, participantId, participantType, token) {
+    return axios.delete(`${BACKEND_URL}${TOURNAMENT_API.TOURNAMENT_PARTICIPANT(tournamentId, participantId)}`, {
+        params: { participantType },
+        headers: { Authorization: `Bearer ${token}` },
+    });
+}
+
+export function notifyTournamentParticipants(tournamentId, token) {
+    return axios.post(
+        `${BACKEND_URL}${TOURNAMENT_API.TOURNAMENT_NOTIFY(tournamentId)}`,
+        {},
+        {
+            headers: { Authorization: `Bearer ${token}` },
+        }
+    );
+}
+
+// User tournament functions
+export function getUserTournaments(userId, token, state = null, participantType = null) {
+    const params = {};
+    if (state) params.state = state;
+    if (participantType) params.participantType = participantType;
+
+    return axios.get(`${BACKEND_URL}${TOURNAMENT_API.USER_TOURNAMENTS(userId)}`, {
+        params,
+        headers: { Authorization: `Bearer ${token}` },
+    });
+}
+
+export function getUserTournamentsDetails(userId, token, state = null) {
+    const params = {};
+    if (state) params.state = state;
+
+    return axios.get(`${BACKEND_URL}${TOURNAMENT_API.USER_TOURNAMENTS_DETAILS(userId)}`, {
+        params,
+        headers: { Authorization: `Bearer ${token}` },
+    });
+}
+
+export function getUserOngoingTournaments(userId, token) {
+    return axios.get(`${BACKEND_URL}${TOURNAMENT_API.USER_ONGOING_TOURNAMENTS(userId)}`, {
+        headers: { Authorization: `Bearer ${token}` },
+    });
+}
+
+export function getUserOpenRegistrationTournaments(userId, token) {
+    return axios.get(`${BACKEND_URL}${TOURNAMENT_API.USER_OPEN_REGISTRATION(userId)}`, {
+        headers: { Authorization: `Bearer ${token}` },
+    });
+}
+
+export function getUserEndedTournaments(userId, token) {
+    return axios.get(`${BACKEND_URL}${TOURNAMENT_API.USER_ENDED_TOURNAMENTS(userId)}`, {
+        headers: { Authorization: `Bearer ${token}` },
+    });
+}
+
+// Team API endpoints
+export const TEAM_API = {
+    TEAMS: "/api/v1/teams",
+    TEAM: (teamId) => `/api/v1/teams/${teamId}`,
+    TEAM_PARTICIPANTS: (teamId) => `/api/v1/teams/${teamId}/participants`,
+    TEAM_PARTICIPANT: (teamId, userId) => `/api/v1/teams/${teamId}/participants/${userId}`,
+};
+
+// Team management functions
+export function getTeams(token) {
+    return axios.get(`${BACKEND_URL}${TEAM_API.TEAMS}`, {
+        headers: { Authorization: `Bearer ${token}` },
+    });
+}
+
+export function createTeam(data, token) {
+    return axios.post(`${BACKEND_URL}${TEAM_API.TEAMS}`, data, {
+        headers: { Authorization: `Bearer ${token}` },
+    });
+}
+
+export function getTeam(teamId, token) {
+    return axios.get(`${BACKEND_URL}${TEAM_API.TEAM(teamId)}`, {
+        headers: { Authorization: `Bearer ${token}` },
+    });
+}
+
+export function updateTeam(teamId, data, token) {
+    return axios.put(`${BACKEND_URL}${TEAM_API.TEAM(teamId)}`, data, {
+        headers: { Authorization: `Bearer ${token}` },
+    });
+}
+
+export function patchTeam(teamId, data, token) {
+    return axios.patch(`${BACKEND_URL}${TEAM_API.TEAM(teamId)}`, data, {
+        headers: { Authorization: `Bearer ${token}` },
+    });
+}
+
+export function deleteTeam(teamId, token) {
+    return axios.delete(`${BACKEND_URL}${TEAM_API.TEAM(teamId)}`, {
+        headers: { Authorization: `Bearer ${token}` },
+    });
+}
+
+export function getTeamParticipants(teamId, token) {
+    return axios.get(`${BACKEND_URL}${TEAM_API.TEAM_PARTICIPANTS(teamId)}`, {
+        headers: { Authorization: `Bearer ${token}` },
+    });
+}
+
+export function addTeamParticipant(teamId, userId, token) {
+    return axios.post(
+        `${BACKEND_URL}${TEAM_API.TEAM_PARTICIPANT(teamId, userId)}`,
+        {},
+        {
+            headers: { Authorization: `Bearer ${token}` },
+        }
+    );
+}
+
+export function removeTeamParticipant(teamId, userId, token) {
+    return axios.delete(`${BACKEND_URL}${TEAM_API.TEAM_PARTICIPANT(teamId, userId)}`, {
+        headers: { Authorization: `Bearer ${token}` },
+    });
+}
+
+// Competition Engine API endpoints
+export const COMPETITION_API = {
+    TOURS: "/tour",
+    TOUR: (tourId) => `/tour/${tourId}`,
+    BRACKET: (tourId) => `/bracket/${tourId}`,
+    TOUR_MATCHES: (tourId) => `/tour/${tourId}/matches`,
+    TOUR_MATCH: (tourId, matchId) => `/tour/${tourId}/matches/${matchId}`,
+    MATCH: (matchId) => `/matches/${matchId}`,
+};
+
+// Tournament (Tour) management functions
+export function createTour(data, token) {
+    return axios.post(`${BACKEND_URL}${COMPETITION_API.TOURS}`, data, {
+        headers: { Authorization: `Bearer ${token}` },
+    });
+}
+
+export function getTour(tourId, token) {
+    return axios.get(`${BACKEND_URL}${COMPETITION_API.TOUR(tourId)}`, {
+        headers: { Authorization: `Bearer ${token}` },
+    });
+}
+
+export function updateTour(tourId, data, token) {
+    return axios.put(`${BACKEND_URL}${COMPETITION_API.TOUR(tourId)}`, data, {
+        headers: { Authorization: `Bearer ${token}` },
+    });
+}
+
+export function deleteTour(tourId, token) {
+    return axios.delete(`${BACKEND_URL}${COMPETITION_API.TOUR(tourId)}`, {
+        headers: { Authorization: `Bearer ${token}` },
+    });
+}
+
+// Bracket management functions
+export function getBracket(tourId, token) {
+    return axios.get(`${BACKEND_URL}${COMPETITION_API.BRACKET(tourId)}`, {
+        headers: { Authorization: `Bearer ${token}` },
+    });
+}
+
+export function updateBracket(tourId, data, token) {
+    return axios.patch(`${BACKEND_URL}${COMPETITION_API.BRACKET(tourId)}`, data, {
+        headers: { Authorization: `Bearer ${token}` },
+    });
+}
+
+// Match management functions
+export function getTourMatches(tourId, token) {
+    return axios.get(`${BACKEND_URL}${COMPETITION_API.TOUR_MATCHES(tourId)}`, {
+        headers: { Authorization: `Bearer ${token}` },
+    });
+}
+
+export function createTourMatch(tourId, data, token) {
+    return axios.post(`${BACKEND_URL}${COMPETITION_API.TOUR_MATCHES(tourId)}`, data, {
+        headers: { Authorization: `Bearer ${token}` },
+    });
+}
+
+export function getTourMatch(tourId, matchId, token) {
+    return axios.get(`${BACKEND_URL}${COMPETITION_API.TOUR_MATCH(tourId, matchId)}`, {
+        headers: { Authorization: `Bearer ${token}` },
+    });
+}
+
+export function updateTourMatch(tourId, matchId, data, token) {
+    return axios.put(`${BACKEND_URL}${COMPETITION_API.TOUR_MATCH(tourId, matchId)}`, data, {
+        headers: { Authorization: `Bearer ${token}` },
+    });
+}
+
+export function patchTourMatch(tourId, matchId, data, token) {
+    return axios.patch(`${BACKEND_URL}${COMPETITION_API.TOUR_MATCH(tourId, matchId)}`, data, {
+        headers: { Authorization: `Bearer ${token}` },
+    });
+}
+
+export function deleteTourMatch(tourId, matchId, token) {
+    return axios.delete(`${BACKEND_URL}${COMPETITION_API.TOUR_MATCH(tourId, matchId)}`, {
+        headers: { Authorization: `Bearer ${token}` },
+    });
+}
+
+// Global match access (read-only)
+export function getMatch(matchId, token) {
+    return axios.get(`${BACKEND_URL}${COMPETITION_API.MATCH(matchId)}`, {
+        headers: { Authorization: `Bearer ${token}` },
+    });
+}
