@@ -371,12 +371,12 @@ export function removeTeamParticipant(teamId, userId, token) {
 
 // Competition Engine API endpoints
 export const COMPETITION_API = {
-    TOURS: "/api/v1web/tour",
-    TOUR: (tourId) => `/api/v1web/tour/${tourId}`,
-    BRACKET: (tourId) => `/api/v1web/bracket/${tourId}`,
-    TOUR_MATCHES: (tourId) => `/api/v1web/tour/${tourId}/matches`,
-    TOUR_MATCH: (tourId, matchId) => `/api/v1web/tour/${tourId}/matches/${matchId}`,
-    MATCH: (matchId) => `/api/v1web/matches/${matchId}`,
+    TOURS: ":8088/api/v1/tour",
+    TOUR: (tourId) => `:8088/api/v1/tour/${tourId}`,
+    BRACKET: (tourId) => `:8088/api/v1/bracket/${tourId}`,
+    TOUR_MATCHES: (tourId) => `:8088/api/v1/tour/${tourId}/matches`,
+    TOUR_MATCH: (tourId, matchId) => `:8088/api/v1/tour/${tourId}/matches/${matchId}`,
+    MATCH: (matchId) => `:8088/api/v1/matches/${matchId}`,
 };
 
 // Tournament (Tour) management functions
