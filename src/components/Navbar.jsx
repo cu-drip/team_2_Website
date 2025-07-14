@@ -1,4 +1,4 @@
-import React from "react";
+import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import AppBar from "@mui/material/AppBar";
 import Toolbar from "@mui/material/Toolbar";
@@ -18,19 +18,23 @@ import useMediaQuery from "@mui/material/useMediaQuery";
 import { useTheme } from "@mui/material/styles";
 import Typography from "@mui/material/Typography";
 
-const navLinks = [
+const baseNavLinks = [
     { label: "Главная", path: "/" },
+    { label: "Турниры", path: "/tournaments" },
+    { label: "Команды", path: "/teams" },
     { label: "Чаты", path: "/chats" },
-    { label: "Отзывы Матча", path: "/feedback/match/123123" },
-    { label: "Отзывы Турнира", path: "/feedback/tournament/123123" },
-    { label: "Отзывы Пользователя (admin)", path: "/admin/feedback/123123" },
+    { label: "Отзывы", path: "/feedback" },
+];
+const adminNavLinks = [
+    { label: "Админ панель", path: "/admin" }
 ];
 
 export default function Navbar() {
     const location = useLocation();
     const { user, logout } = useAuth();
-    const [anchorEl, setAnchorEl] = React.useState(null);
-    const [mobileMenuAnchor, setMobileMenuAnchor] = React.useState(null);
+    const navLinks = user?.admin ? [...baseNavLinks, ...adminNavLinks] : baseNavLinks;
+    const [anchorEl, setAnchorEl] = useState(null);
+    const [mobileMenuAnchor, setMobileMenuAnchor] = useState(null);
     const theme = useTheme();
     const isMobile = useMediaQuery(theme.breakpoints.down("md"));
 
