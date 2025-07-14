@@ -29,10 +29,10 @@ export const BACKEND_URL = `https://t-competition.ru`;
 
 // Auth API endpoints
 export const API = {
-    LOGIN: "/api/v1/auth/login",
-    REGISTER: "/api/v1/auth/register",
-    PROFILE: "/api/v1/auth/me",
-    USER_BY_ID: (userId) => `/api/v1/users/${userId}`,
+    LOGIN: "/api/v1web/auth/login",
+    REGISTER: "/api/v1web/auth/register",
+    PROFILE: "/api/v1web/auth/me",
+    USER_BY_ID: (userId) => `/api/v1web/users/${userId}`,
 };
 
 export function login(data) {
@@ -57,10 +57,10 @@ export function getUserById(userId, token) {
 
 // Feedback API endpoints
 export const FEEDBACK_API = {
-    MATCHES: "/api/v1/feedback/matches",
-    TOURNAMENTS: "/api/v1/feedback/tournaments",
-    ADMIN_USER_MATCHES: (userId) => `/api/v1/admin/users/${userId}/matches`,
-    ADMIN_USER_TOURNAMENTS: (userId) => `/api/v1/admin/users/${userId}/tournaments`,
+    MATCHES: "/api/v1web/feedback/matches",
+    TOURNAMENTS: "/api/v1web/feedback/tournaments",
+    ADMIN_USER_MATCHES: (userId) => `/api/v1web/admin/users/${userId}/matches`,
+    ADMIN_USER_TOURNAMENTS: (userId) => `/api/v1web/admin/users/${userId}/tournaments`,
 };
 
 export function getMatchFeedback(matchId, token, page = 0, size = 20) {
@@ -105,10 +105,10 @@ export function getAdminUserTournamentFeedback(userId, token, page = 0, size = 2
 
 // Chat API endpoints
 export const CHAT_API = {
-    CHATS: "/api/v1/chats",
-    CHAT_USERS: (chatId) => `/api/v1/chats/${chatId}/users`,
-    CHAT_USER: (chatId, userId) => `/api/v1/chats/${chatId}/users/${userId}`,
-    CHAT_MESSAGES: (chatId) => `/api/v1/chats/${chatId}/messages`,
+    CHATS: "/api/v1web/chats",
+    CHAT_USERS: (chatId) => `/api/v1web/chats/${chatId}/users`,
+    CHAT_USER: (chatId, userId) => `/api/v1web/chats/${chatId}/users/${userId}`,
+    CHAT_MESSAGES: (chatId) => `/api/v1web/chats/${chatId}/messages`,
 };
 
 // Chat management functions
@@ -179,16 +179,16 @@ export function getWebSocketUrl(chatId, token) {
 
 // Competition Service API endpoints
 export const TOURNAMENT_API = {
-    TOURNAMENTS: "/api/v1/tournaments",
-    TOURNAMENT: (tournamentId) => `/api/v1/tournaments/${tournamentId}`,
-    TOURNAMENT_PARTICIPANTS: (tournamentId) => `/api/v1/tournaments/${tournamentId}/participants`,
-    TOURNAMENT_PARTICIPANT: (tournamentId, participantId) => `/api/v1/tournaments/${tournamentId}/participants/${participantId}`,
-    TOURNAMENT_NOTIFY: (tournamentId) => `/api/v1/tournaments/${tournamentId}/notify`,
-    USER_TOURNAMENTS: (userId) => `/api/v1/tournaments/users/${userId}`,
-    USER_TOURNAMENTS_DETAILS: (userId) => `/api/v1/tournaments/users/${userId}/details`,
-    USER_ONGOING_TOURNAMENTS: (userId) => `/api/v1/tournaments/users/${userId}/ongoing`,
-    USER_OPEN_REGISTRATION: (userId) => `/api/v1/tournaments/users/${userId}/open-registration`,
-    USER_ENDED_TOURNAMENTS: (userId) => `/api/v1/tournaments/users/${userId}/ended`,
+    TOURNAMENTS: "/api/v1web/tournaments",
+    TOURNAMENT: (tournamentId) => `/api/v1web/tournaments/${tournamentId}`,
+    TOURNAMENT_PARTICIPANTS: (tournamentId) => `/api/v1web/tournaments/${tournamentId}/participants`,
+    TOURNAMENT_PARTICIPANT: (tournamentId, participantId) => `/api/v1web/tournaments/${tournamentId}/participants/${participantId}`,
+    TOURNAMENT_NOTIFY: (tournamentId) => `/api/v1web/tournaments/${tournamentId}/notify`,
+    USER_TOURNAMENTS: (userId) => `/api/v1web/tournaments/users/${userId}`,
+    USER_TOURNAMENTS_DETAILS: (userId) => `/api/v1web/tournaments/users/${userId}/details`,
+    USER_ONGOING_TOURNAMENTS: (userId) => `/api/v1web/tournaments/users/${userId}/ongoing`,
+    USER_OPEN_REGISTRATION: (userId) => `/api/v1web/tournaments/users/${userId}/open-registration`,
+    USER_ENDED_TOURNAMENTS: (userId) => `/api/v1web/tournaments/users/${userId}/ended`,
 };
 
 // Tournament management functions
@@ -304,10 +304,10 @@ export function getUserEndedTournaments(userId, token) {
 
 // Team API endpoints
 export const TEAM_API = {
-    TEAMS: "/api/v1/teams",
-    TEAM: (teamId) => `/api/v1/teams/${teamId}`,
-    TEAM_PARTICIPANTS: (teamId) => `/api/v1/teams/${teamId}/participants`,
-    TEAM_PARTICIPANT: (teamId, userId) => `/api/v1/teams/${teamId}/participants/${userId}`,
+    TEAMS: "/api/v1web/teams",
+    TEAM: (teamId) => `/api/v1web/teams/${teamId}`,
+    TEAM_PARTICIPANTS: (teamId) => `/api/v1web/teams/${teamId}/participants`,
+    TEAM_PARTICIPANT: (teamId, userId) => `/api/v1web/teams/${teamId}/participants/${userId}`,
 };
 
 // Team management functions
@@ -371,12 +371,12 @@ export function removeTeamParticipant(teamId, userId, token) {
 
 // Competition Engine API endpoints
 export const COMPETITION_API = {
-    TOURS: "/api/v1/tour",
-    TOUR: (tourId) => `/api/v1/tour/${tourId}`,
-    BRACKET: (tourId) => `/api/v1/bracket/${tourId}`,
-    TOUR_MATCHES: (tourId) => `/api/v1/tour/${tourId}/matches`,
-    TOUR_MATCH: (tourId, matchId) => `/api/v1/tour/${tourId}/matches/${matchId}`,
-    MATCH: (matchId) => `/api/v1/matches/${matchId}`,
+    TOURS: "/api/v1web/tour",
+    TOUR: (tourId) => `/api/v1web/tour/${tourId}`,
+    BRACKET: (tourId) => `/api/v1web/bracket/${tourId}`,
+    TOUR_MATCHES: (tourId) => `/api/v1web/tour/${tourId}/matches`,
+    TOUR_MATCH: (tourId, matchId) => `/api/v1web/tour/${tourId}/matches/${matchId}`,
+    MATCH: (matchId) => `/api/v1web/matches/${matchId}`,
 };
 
 // Tournament (Tour) management functions
