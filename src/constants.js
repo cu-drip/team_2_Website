@@ -25,7 +25,7 @@ export function formatTimestamp(timestamp) {
     }
 }
 
-export const BACKEND_URL = `http://51.250.38.151:8080`;
+export const BACKEND_URL = `https://t-competition.ru`;
 
 // Auth API endpoints
 export const API = {
