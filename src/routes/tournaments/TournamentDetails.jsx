@@ -187,7 +187,8 @@ export default function TournamentDetails() {
 
         // Check if tournament exists in Competition Engine
         try {
-          await getBracket(id, accessToken);
+          const bracket = await getBracket(id, accessToken);
+          if (bracket.data.contains("Upstream error")) throw {response: bracket};
           setTournamentExistsInEngine(true);
           
           // If tournament exists in engine, fetch matches and bracket
@@ -199,7 +200,7 @@ export default function TournamentDetails() {
           setMatches(Array.isArray(matchRes?.data) ? matchRes.data : []);
           setBracket(bracketRes?.data || null);
         } catch (err) {
-          if (err.response?.status === 404) {
+          if (err.response?.status === 404 || err.response?.data.contains("Upstream error")) {
             setTournamentExistsInEngine(false);
             setMatches([]);
             setBracket(null);

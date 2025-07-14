@@ -49,10 +49,11 @@ export default function Tournaments() {
   // Check if tournament exists in Competition Engine
   const checkTournamentEngineStatus = async (tournamentId) => {
     try {
-      await getBracket(tournamentId, accessToken);
+      const bracket = await getBracket(tournamentId, accessToken);
+      if (bracket.data.contains("Upstream error")) throw {response: bracket};
       return true; // Tournament exists in engine
     } catch (err) {
-      if (err.response?.status === 404) {
+      if (err.response?.status === 404 || err.response?.data.contains("Upstream error")) {
         // Tournament doesn't exist in engine
         return false;
       }
