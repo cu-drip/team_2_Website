@@ -116,9 +116,9 @@ export default function CreateTournament() {
             const tournamentData = {
                 title: formData.title.trim(),
                 description: formData.description.trim() || null,
-                sport: formData.sport,
-                typeTournament: formData.typeTournament,
-                typeGroup: formData.typeGroup,
+                sport: formData.sport.toLowerCase(),
+                typeTournament: formData.typeTournament.toLowerCase(),
+                typeGroup: formData.typeGroup.toLowerCase(),
                 startTime: formData.startTime,
                 entryCost: formData.entryCost ? parseFloat(formData.entryCost) : null,
                 maxParticipants: formData.maxParticipants ? parseInt(formData.maxParticipants) : null,

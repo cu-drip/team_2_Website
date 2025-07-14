@@ -29,6 +29,7 @@ export default function ChatListSidebar({ selectedChatId, onChatSelect, onCreate
 
             try {
                 const response = await getChats(accessToken);
+                response.data.forEach(() => {});
                 setChats(response.data || []);
             } catch {
                 setError("Ошибка загрузки чатов");
