@@ -123,6 +123,8 @@ export default function CreateTournament() {
                 entryCost: formData.entryCost ? parseFloat(formData.entryCost) : null,
                 maxParticipants: formData.maxParticipants ? parseInt(formData.maxParticipants) : null,
                 matchesNumber: formData.matchesNumber ? parseInt(formData.matchesNumber) : null,
+                "tournirInstantState": "openedRegistrationTournaments",
+                "organizedId": "933f2863-45a9-4a4e-8cf8-21bae3a2ba08"
             };
 
             const response = await createTournament(tournamentData, accessToken);
